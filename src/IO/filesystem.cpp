@@ -14,4 +14,19 @@ namespace Updater2::IO {
 		return fs::is_directory(path_in);
 	}
 
+	bool writeStringAsFile(const std::string &filename, std::string_view filecontent)
+	{
+		std::ofstream target( filename, std::ios::out);
+		if (target) {
+			target << filecontent;
+		}
+		else {
+			return false;
+		}
+	}
+
+	std::string readFirstLineInFile(const std::string& filename) {
+		std::ifstream target(filename, std::ios::in);
+	}
+
 } // namespace Updater2::IO
