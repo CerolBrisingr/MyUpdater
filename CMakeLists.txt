@@ -16,7 +16,8 @@ else()
 endif()
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "Install path" FORCE)
-add_subdirectory(src)
+add_subdirectory(src/IO)
+add_subdirectory(src/updater)
 
 if(Updater2_USE_QT_UI)
     target_link_libraries(Updater2 PRIVATE Qt6::Widgets)

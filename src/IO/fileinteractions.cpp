@@ -1,8 +1,17 @@
-#include "Updater2/IO/filesystem.h"
+#include "IO/fileinteractions.h"
 
 namespace fs = std::filesystem;
 
 namespace Updater2::IO {
+
+	std::string readMd5Hash(const std::string& filename)
+	{
+		std::cout << "Will calculate md5 hash for file: " << filename << '\n';
+		//MD5_CTX* test;
+		//MD5_Init(test);
+		std::cout << "Arrived here!\n";
+		return "";
+	}
 
 	void printCurrentPath()
 	{
@@ -23,10 +32,12 @@ namespace Updater2::IO {
 		else {
 			return false;
 		}
+		return true;
 	}
 
 	std::string readFirstLineInFile(const std::string& filename) {
 		std::ifstream target(filename, std::ios::in);
+		return "Not ready!";
 	}
 
 } // namespace Updater2::IO
