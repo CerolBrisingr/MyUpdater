@@ -10,4 +10,10 @@ target_link_libraries( fileinteraction_test
 )
 
 include(GoogleTest)
-gtest_discover_tests(fileinteraction_test)
+
+set(ASSET_DIR ${PROJECT_SOURCE_DIR}/assets)
+gtest_discover_tests(fileinteraction_test 
+	PROPERTIES 
+		WORKING_DIRECTORY ${ASSET_DIR}/md5
+		ENVIRONMENT "TEST_DATA_DIR=test"
+)

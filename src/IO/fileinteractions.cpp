@@ -23,6 +23,11 @@ namespace Updater2::IO {
 		return fs::is_directory(path_in);
 	}
 
+	bool isFile(std::string_view path_in)
+	{
+		return fs::is_regular_file(path_in);
+	}
+
 	bool writeStringAsFile(const std::string &filename, std::string_view filecontent)
 	{
 		std::ofstream target( filename, std::ios::out);
