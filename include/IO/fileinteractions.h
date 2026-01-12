@@ -9,10 +9,15 @@
 #include <cstddef>
 #include <array>
 #include <cassert>
+#include <memory>
+#include <sstream>
+#include <iomanip>
 
 using namespace std::literals;
 
 namespace Updater2::IO {
+
+	static constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
 
 	class SslDigest {
 	public:
@@ -36,6 +41,7 @@ namespace Updater2::IO {
 	private:
 		EVP_MD_CTX* mdctx = nullptr; // Context for EVP (State & Settings I'd expect)
 		std::string getEvpMdName(SslDigest::Type digestType);
+		std::string getHexString(unsigned char* data, unsigned int numElements);
 	};
 
 	std::string calculateMd5Hash(const std::string& filename);

@@ -48,7 +48,7 @@ namespace Updater2::IO {
 		unsigned char md_value[EVP_MAX_MD_SIZE];
 		unsigned int md_len;
 		EVP_DigestFinal_ex(mdctx, md_value, &md_len);
-		return std::string{ reinterpret_cast<char*>(md_value), md_len };
+		return getHexString(md_value, md_len);
 	}
 
 	std::string SslDigest::getEvpMdName(SslDigest::Type digestType) {
@@ -56,22 +56,35 @@ namespace Updater2::IO {
 		return std::string{ digestNames[static_cast<std::size_t>(digestType)] };
 	}
 
-	constexpr std::size_t blockSize{ 1024 * 1024 };
+	std::string SslDigest::getHexString(unsigned char* data, unsigned int numElements) {
+		std::stringstream target;
+		for (int i{ 0 }; i < numElements; i++) {
+			target << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(data[i]);
+		}
+		return target.str();
+	}
 
 	std::string calculateMd5Hash(const std::string& filename)
 	{
-		std::cout << "Will calculate md5 hash for file: " << filename << '\n';
 		SslDigest digest{ SslDigest::Type::MD5 };
-		std::ifstream file(filename, std::ios::binary | std::ios::ate);
-		if (file.is_open()) {
-			auto size = file.tellg();
-			std::cout << "Size of file: " << size << '\n';
+		std::ifstream file(filename, std::ios::binary);
+		if (!file) {
+			return "";
+		}
+		auto buffer{ std::make_unique<char[]>(g_bufferSize) };
+		while (file) {
+			file.read(buffer.get(), g_bufferSize);
+			std::streamsize bytesRead = file.gcount();
+			digest.update(buffer.get(), bytesRead);
+			std::cout << "Did read " << bytesRead << " bytes\n";
 		}
 		return digest.finalize();
 	}
 
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2)
 	{
+		std::cout << "Hash 1: " << hash1 << '\n';
+		std::cout << "Hash 2: " << hash2 << '\n';
 		return hash1.compare( hash2 ) == 0;
 	}
 
