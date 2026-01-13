@@ -2,11 +2,11 @@
 add_library(Updater2_Core)
 target_sources(Updater2_Core
     PUBLIC
-        hello.cpp)
+        src/hello.cpp)
 
 target_include_directories(Updater2_Core
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/include)
+        ${CMAKE_CURRENT_LIST_DIR}/include)
 
 qt_standard_project_setup()
 
@@ -19,7 +19,7 @@ target_link_libraries(Updater2
 
 target_sources(Updater2
     PRIVATE 
-        main.cpp)
+        src/main.cpp)
 
 #[==[
 

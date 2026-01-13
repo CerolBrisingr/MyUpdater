@@ -1,6 +1,6 @@
 add_executable(
   fileinteraction_test
-  IO/fileinteraction_test.cpp
+  fileinteraction/fileinteraction_test.cpp
 )
 
 target_link_libraries( fileinteraction_test
@@ -11,7 +11,8 @@ target_link_libraries( fileinteraction_test
 
 include(GoogleTest)
 
-set(ASSET_DIR ${PROJECT_SOURCE_DIR}/assets)
+set(ASSET_DIR ${CMAKE_CURRENT_LIST_DIR}/../test_assets)
+message("Asset_dir " ${ASSET_DIR})
 gtest_discover_tests(fileinteraction_test
 	PROPERTIES
 		WORKING_DIRECTORY ${ASSET_DIR}/md5

@@ -56,7 +56,7 @@ namespace Updater2::IO {
 
 	std::string SslDigest::getHexString(unsigned char* data, unsigned int numElements) {
 		std::stringstream target;
-		for (int i{ 0 }; i < numElements; i++) {
+		for (std::size_t i{ 0 }; i < numElements; i++) {
 			target << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(data[i]);
 		}
 		return target.str();
