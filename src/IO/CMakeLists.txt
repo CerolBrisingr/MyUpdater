@@ -3,7 +3,8 @@ find_package(OpenSSL REQUIRED)
 add_library(Fileinteractions STATIC)
 target_sources(Fileinteractions
     PUBLIC
-        fileinteractions.cpp)
+        fileinteractions.cpp 
+        ssldigest.cpp)
 
 target_include_directories(Fileinteractions
     PUBLIC
