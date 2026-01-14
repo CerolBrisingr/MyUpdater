@@ -50,7 +50,6 @@ namespace Updater2::IO {
 	}
 
 	std::string SslDigest::getEvpMdName(SslDigest::Type digestType) {
-		assert(digestType != Type::numTypes && "Chosen digestType is reserved for internal use");
 		return std::string{ digestNames[static_cast<std::size_t>(digestType)] };
 	}
 
