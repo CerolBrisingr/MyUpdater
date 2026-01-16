@@ -48,12 +48,18 @@ namespace Updater2::IO {
 	}
 
 	void SslDigest::update(const void* data, std::size_t count) {
+		if (!g_mdctx) [[unlikely]] {
+			throw std::runtime_error("This object was most likely moved-from, initialize before re-use");
+		}
 		if (EVP_DigestUpdate(g_mdctx.get(), data, count) != 1) {
 			throw std::runtime_error("EVP_DigestUpdate failed");
 		}
 	}
 
 	std::string SslDigest::finalize() {
+		if (!g_mdctx) [[unlikely]] {
+			throw std::runtime_error("This object was most likely moved-from, initialize before re-use");
+		}
 		unsigned char md_value[EVP_MAX_MD_SIZE];
 		unsigned int md_len;
 		if (EVP_DigestFinal_ex(g_mdctx.get(), md_value, &md_len) != 1) {
@@ -81,6 +87,12 @@ namespace Updater2::IO {
 			target << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(data[i]);
 		}
 		return target.str();
+	}
+
+	const EVP_MD* SslDigest::getMd5() {
+		static OSSL_PROVIDER* legacy = OSSL_PROVIDER_load(NULL, "legacy");
+		static OSSL_PROVIDER* default_provider = OSSL_PROVIDER_load(NULL, "default");
+		return EVP_md5();
 	}
 
 	void swap(SslDigest& lhs, SslDigest& rhs) noexcept {

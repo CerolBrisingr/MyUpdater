@@ -11,6 +11,7 @@
 #include <memory>
 
 namespace Updater2::IO {
+	static constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
 
 	std::string calculateMd5Hash(const std::string& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);

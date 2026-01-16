@@ -73,3 +73,18 @@ TEST(SslDigestTest, Copy3) {
 	EXPECT_EQ(digest2.finalize(), md5);
 	EXPECT_EQ(digest3.finalize(), md5);
 }
+
+TEST(SslDigestTest, Move) {
+	myfs::SslDigest source{ myfs::SslDigest::Type::MD5 };
+	source.update(md5_input, std::strlen(md5_input));
+	myfs::SslDigest target{ std::move(source) };
+	EXPECT_EQ(md5_result, target.finalize());
+	EXPECT_THROW(source.update("test", 4), std::runtime_error);
+	source = myfs::SslDigest{ myfs::SslDigest::Type::MD5 };  // Reuse
+	EXPECT_EQ(md5_empty, source.finalize());
+}
+
+TEST(SslDigestTest, Move2) {
+	EXPECT_TRUE(false);
+	// TODO: move assignment
+}

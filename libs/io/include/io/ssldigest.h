@@ -1,6 +1,7 @@
 #pragma once
 
 #include <openssl/evp.h>
+#include <openssl/provider.h>
 #include <sstream>
 #include <iomanip>
 #include <cassert>
@@ -12,15 +13,16 @@
 
 namespace Updater2::IO {
 
-	static constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
-
 	class SslDigest {
+	private:
+		// Helper must be decleared ahead of Macro expansion
+		static const EVP_MD* getMd5();
 	public:		// enum class Type needs to be exposed
 		// This interface begrudgingly uses X-Macros
 		// 1) Single source of truth for both enum "Type" and array "digestMds"
 		// 2) No leaking sentinel as used in "static_assert(std::size(digestMds) == static_cast<std::size_t>(Type::numTypes));"
 #define DIGEST_LIST(DO) \
-	DO(MD5, &EVP_md5) \
+	DO(MD5, &getMd5) \
 	DO(SHA2_224, &EVP_sha224) \
 	DO(SHA2_256, &EVP_sha256) \
 	DO(SHA2_512_224, &EVP_sha512_224) \
@@ -32,12 +34,12 @@ namespace Updater2::IO {
 	DO(SHA3_512, &EVP_sha3_512)
 
 #define PRODUCE_TAG(tag, fn) tag,
-#define PRODUCE_FN(tag, fn) fn, 
+#define PRODUCE_FN(tag, fn) fn,
 		enum class Type {
 			DIGEST_LIST(PRODUCE_TAG)
 		}; // First prints out content of digest_list while replacing "do" with "produce_tag", then macro "produce_tag" reduces each occurence to "tag,"
 	private: // digestMds does not need to be exposed
-		static constexpr std::array digestMds{
+		static inline constexpr std::array digestMds{
 			DIGEST_LIST(PRODUCE_FN)
 		};
 #undef DIGEST_LIST
