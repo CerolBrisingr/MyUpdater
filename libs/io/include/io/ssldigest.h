@@ -59,7 +59,6 @@ namespace Updater2::IO {
 
 		friend void swap(SslDigest& a, SslDigest& b) noexcept;
 	private:
-		Type g_digestType{};
 		// g_mdctx: Context for EVP (State & Settings I'd expect)
 		std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> g_mdctx{ nullptr, &EVP_MD_CTX_free };
 

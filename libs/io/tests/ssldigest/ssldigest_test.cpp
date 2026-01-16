@@ -8,6 +8,7 @@
 using namespace std::literals;
 
 constexpr std::string_view md5_result{ "1ad2ec548147a57a706fac2e1ec7112c" };
+constexpr std::string_view md5_empty{ "d41d8cd98f00b204e9800998ecf8427e" };
 constexpr const char* md5_input{ "Do not change content!" };
 constexpr std::size_t md5_input_size{ std::char_traits<char>::length(md5_input) };
 constexpr std::size_t bundle_size{ 10 };
@@ -34,7 +35,9 @@ TEST(SslDigestTest, GetMd5) {
 	myfs::SslDigest digest{ myfs::SslDigest::Type::MD5 };
 	digest.update(md5_input, md5_input_size);
 	EXPECT_EQ(md5_result, digest.finalize());
-	EXPECT_EQ(md5_result, digest.finalize());  // Expect context to be re-initalized
+	EXPECT_EQ(md5_empty, digest.finalize());  // Expect context to be re-initalized
+	digest.update(md5_input, md5_input_size);
+	EXPECT_EQ(md5_result, digest.finalize());
 }
 
 TEST(SslDigestTest, Copy) {

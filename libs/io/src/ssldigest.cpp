@@ -3,7 +3,6 @@
 namespace Updater2::IO {
 
 	SslDigest::SslDigest(Type digestType)
-		:g_digestType{digestType}
 	{
 		const EVP_MD* digestAlgorithm{ getEvpMd(digestType) };
 		if (!digestAlgorithm) throw std::logic_error("Requested digest is not available");
@@ -20,7 +19,6 @@ namespace Updater2::IO {
 	SslDigest::~SslDigest() {}
 
 	SslDigest::SslDigest(const SslDigest& rhs) 
-		:g_digestType{rhs.g_digestType }
 	{
 		g_mdctx.reset(EVP_MD_CTX_new());
 		if (g_mdctx == nullptr) throw std::bad_alloc();
@@ -39,14 +37,13 @@ namespace Updater2::IO {
 	}
 
 	SslDigest::SslDigest(SslDigest&& rhs) noexcept
-		:g_mdctx{ std::move(rhs.g_mdctx) }, g_digestType{rhs.g_digestType }
+		:g_mdctx{ std::move(rhs.g_mdctx) }
 	{}
 
 	SslDigest& SslDigest::operator= (SslDigest&& rhs) noexcept
 	{
 		if (&rhs == this) { return *this; }
 		g_mdctx.swap(rhs.g_mdctx);
-		std::swap(g_digestType, rhs.g_digestType);
 		return *this;
 	}
 
@@ -68,9 +65,7 @@ namespace Updater2::IO {
 
 	void SslDigest::restoreDigestContext()
 	{
-		const EVP_MD* digestAlgorithm{ getEvpMd(g_digestType) };
-		if (!digestAlgorithm) throw std::logic_error("Requested digest is not available");
-		if (EVP_DigestInit_ex(g_mdctx.get(), digestAlgorithm, nullptr) != 1)
+		if (EVP_DigestInit_ex(g_mdctx.get(), nullptr, nullptr) != 1)
 		{
 			throw std::runtime_error("EVP_DigestInit_ex failed");
 		}
@@ -89,7 +84,6 @@ namespace Updater2::IO {
 	}
 
 	void swap(SslDigest& lhs, SslDigest& rhs) noexcept {
-		std::swap(lhs.g_digestType, rhs.g_digestType);
 		std::swap(lhs.g_mdctx, rhs.g_mdctx);
 	}
 
