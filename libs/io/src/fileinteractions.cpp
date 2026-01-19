@@ -5,7 +5,7 @@ namespace fs = std::filesystem;
 
 namespace Updater2::IO {
 
-	std::string calculateMd5Hash(const std::string& filename)
+	std::string calculateMd5HashFromFile(const std::string& filename)
 	{
 		ssl::SslDigest digest{ ssl::SslDigest::Type::MD5 };
 		std::ifstream file(filename, std::ios::binary);
@@ -24,8 +24,7 @@ namespace Updater2::IO {
 
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2)
 	{
-		std::cout << "Hash 1: " << hash1 << '\n';
-		std::cout << "Hash 2: " << hash2 << '\n';
+		// TODO: remove case sensitivity and irrelevant characters
 		return hash1.compare( hash2 ) == 0;
 	}
 
@@ -57,8 +56,10 @@ namespace Updater2::IO {
 	}
 
 	std::string readFirstLineInFile(const std::string& filename) {
-		std::ifstream target(filename, std::ios::in);
-		return "Not ready!";
+		std::ifstream source(filename, std::ios::in);
+		std::string out{};
+		std::getline(source, out);
+		return out;
 	}
 
 } // namespace Updater2::IO

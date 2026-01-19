@@ -17,11 +17,15 @@ TEST(FilesystemTest, BasicAssertions) {
 }
 
 TEST(FilesystemTest, Md5) {
-	auto md5Calc{ myfs::calculateMd5Hash("md5_target.txt") };
+	auto md5Calc{ myfs::calculateMd5HashFromFile("md5_target.txt") };
 	EXPECT_FALSE(myfs::compareMd5Hashes(md5Calc, ""));
-	auto md5Calc2{ myfs::calculateMd5Hash("md5_target2.txt") };
+	EXPECT_NE(md5Calc, "");
+	auto md5Calc2{ myfs::calculateMd5HashFromFile("md5_target2.txt") };
 	EXPECT_FALSE(myfs::compareMd5Hashes(md5Calc2, md5Calc));
+	EXPECT_NE(md5Calc2, md5Calc);
 	auto md5Read{ myfs::readFirstLineInFile("md5_result.txt") };
+	EXPECT_NE(md5Read, "");
 	EXPECT_FALSE(myfs::compareMd5Hashes(md5Read, ""));
+	EXPECT_EQ(md5Read, md5Calc);
 	EXPECT_TRUE(myfs::compareMd5Hashes(md5Calc, md5Read));
 }
