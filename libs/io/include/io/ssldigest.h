@@ -11,7 +11,9 @@
 #include <stdexcept>
 #include <memory>
 
-namespace Updater2::IO {
+namespace Updater2::SSL {
+
+	constexpr const char* move_on_error{ "This object was most likely moved - from, initialize before re - use" };
 
 	class SslDigest {
 	private:

@@ -1,6 +1,6 @@
 #include "IO/ssldigest.h"
 
-namespace Updater2::IO {
+namespace Updater2::SSL {
 
 	SslDigest::SslDigest(Type digestType)
 	{
@@ -49,7 +49,7 @@ namespace Updater2::IO {
 
 	void SslDigest::update(const void* data, std::size_t count) {
 		if (!g_mdctx) [[unlikely]] {
-			throw std::runtime_error("This object was most likely moved-from, initialize before re-use");
+			throw std::runtime_error(move_on_error);
 		}
 		if (EVP_DigestUpdate(g_mdctx.get(), data, count) != 1) {
 			throw std::runtime_error("EVP_DigestUpdate failed");
@@ -58,7 +58,7 @@ namespace Updater2::IO {
 
 	std::string SslDigest::finalize() {
 		if (!g_mdctx) [[unlikely]] {
-			throw std::runtime_error("This object was most likely moved-from, initialize before re-use");
+			throw std::runtime_error(move_on_error);
 		}
 		unsigned char md_value[EVP_MAX_MD_SIZE];
 		unsigned int md_len;

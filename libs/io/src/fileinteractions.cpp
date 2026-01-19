@@ -1,12 +1,13 @@
 #include "IO/fileinteractions.h"
 
+namespace ssl = Updater2::SSL;
 namespace fs = std::filesystem;
 
 namespace Updater2::IO {
 
 	std::string calculateMd5Hash(const std::string& filename)
 	{
-		SslDigest digest{ SslDigest::Type::MD5 };
+		ssl::SslDigest digest{ ssl::SslDigest::Type::MD5 };
 		std::ifstream file(filename, std::ios::binary);
 		if (!file) {
 			return "";
