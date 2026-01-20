@@ -9,6 +9,7 @@
 #include <fstream>
 #include <cstddef>
 #include <memory>
+#include <system_error>
 
 namespace Updater2::IO {
 	static constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB

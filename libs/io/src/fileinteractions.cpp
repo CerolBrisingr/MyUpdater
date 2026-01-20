@@ -10,14 +10,15 @@ namespace Updater2::IO {
 		ssl::SslDigest digest{ ssl::SslDigest::Type::MD5 };
 		std::ifstream file(filename, std::ios::binary);
 		if (!file) {
-			return "";
+			// Still possible to further split this up using std::filesystem::exists
+			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
+			throw std::filesystem::filesystem_error("Failed to open file", filename, ec);
 		}
 		auto buffer{ std::make_unique<char[]>(g_bufferSize) };
 		while (file) {
 			file.read(buffer.get(), g_bufferSize);
 			std::streamsize bytesRead = file.gcount();
 			digest.update(buffer.get(), bytesRead);
-			std::cout << "Did read " << bytesRead << " bytes\n";
 		}
 		return digest.finalize();
 	}
@@ -57,6 +58,10 @@ namespace Updater2::IO {
 
 	std::string readFirstLineInFile(const std::string& filename) {
 		std::ifstream source(filename, std::ios::in);
+		if (!source) {
+			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
+			throw std::filesystem::filesystem_error("Failed to open file", filename, ec);
+		}
 		std::string out{};
 		std::getline(source, out);
 		return out;
