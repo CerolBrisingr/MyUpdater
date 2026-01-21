@@ -1,3 +1,5 @@
+include(GoogleTest)
+
 add_executable(
   ssldigest_test
   ssldigest/ssldigest_test.cpp
@@ -19,8 +21,6 @@ target_link_libraries( fileinteraction_test
 		Fileinteractions
 		GTest::gtest_main
 )
-
-include(GoogleTest)
 
 set(ASSET_DIR ${CMAKE_CURRENT_LIST_DIR}/../test_assets)
 message("Asset_dir " ${ASSET_DIR})

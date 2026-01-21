@@ -15,6 +15,11 @@ else()
     find_package(Qt6 REQUIRED COMPONENTS Core)
 endif()
 
+if(Updater2_BUILD_TESTS)
+    find_package(GTest CONFIG REQUIRED)
+    include(CTest)
+endif()
+
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "Install path" FORCE)
 add_subdirectory(libs/io)
 add_subdirectory(tools/list_digest)
@@ -29,11 +34,6 @@ if(Updater2_USE_QT_UI)
     )
 endif()
 
-if(Updater2_BUILD_TESTS)
-    find_package(GTest CONFIG REQUIRED)
-    
-    include(CTest)
-    enable_testing()
-    #add_subdirectory(app/tests)
-    add_subdirectory(libs/io/tests)
+if(BUILD_TESTING)
+    #add_subdirectory(app/tests) #Does not exist yet
 endif()
