@@ -7,6 +7,7 @@ using namespace Updater2;
 
 int main()
 {
+    IO::cleanUpRemainingTempFiles();
     int test{ 10 };
     std::cout << "Hello world!\n";
     printHello();

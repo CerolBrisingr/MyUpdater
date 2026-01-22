@@ -12,7 +12,7 @@
 #include <system_error>
 
 namespace Updater2::IO {
-	static constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
+	void cleanUpRemainingTempFiles();
 
 	std::string calculateMd5HashFromFile(const std::string& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);
@@ -20,7 +20,7 @@ namespace Updater2::IO {
 	void printCurrentPath();
 	bool isFolder(std::string_view path_in);
 	bool isFile(std::string_view path_in);
-	bool writeStringAsFile(const std::string &filename, std::string_view filecontent);
+	void writeStringAsFile(std::string_view filename, std::string_view filecontent);
 	std::string readFirstLineInFile(const std::string& filename);
 
 

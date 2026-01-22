@@ -5,16 +5,50 @@ namespace fs = std::filesystem;
 
 namespace Updater2::IO {
 
+	namespace {
+		constexpr std::string_view g_tempTextLocation{ "temp.txt" };
+		constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
+
+		struct TempFileJunkCollector {
+			const char* path{ nullptr };
+			explicit TempFileJunkCollector(const char* p)
+				:path{ p }
+			{}
+
+			TempFileJunkCollector(TempFileJunkCollector& rhs) = delete;
+			TempFileJunkCollector& operator= (TempFileJunkCollector& rhs) = delete;
+
+			void release()
+			{
+				path = nullptr;
+			}
+
+			~TempFileJunkCollector() {
+				std::error_code ec;
+				fs::remove(path, ec);
+			}
+		};
+	} // namespace
+
+	// Clean up stale temp files from crashed or interrupted runs
+	void cleanUpRemainingTempFiles()
+	{
+		std::error_code ec; // Fail silently
+		if (fs::exists(g_tempTextLocation, ec)) {
+			fs::remove(g_tempTextLocation, ec);
+		}
+	}
+
 	std::string calculateMd5HashFromFile(const std::string& filename)
 	{
 		ssl::SslDigest digest{ ssl::SslDigest::Type::MD5 };
 		std::ifstream file(filename, std::ios::binary);
 		if (!file) {
-			// Still possible to further split this up using std::filesystem::exists
+			// Still possible to further split error cases up using std::filesystem::exists
 			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
 			throw std::filesystem::filesystem_error("Failed to open file", filename, ec);
 		}
-		auto buffer{ std::make_unique<char[]>(g_bufferSize) };
+		auto buffer{ std::make_unique_for_overwrite<char[]>(g_bufferSize) };
 		while (file) {
 			file.read(buffer.get(), g_bufferSize);
 			std::streamsize bytesRead = file.gcount();
@@ -44,16 +78,17 @@ namespace Updater2::IO {
 		return fs::is_regular_file(path_in);
 	}
 
-	bool writeStringAsFile(const std::string &filename, std::string_view filecontent)
+	// Write file to temp, remove current if necessary, copy temp to location
+	void writeStringAsFile(std::string_view filename, std::string_view filecontent)
 	{
-		std::ofstream target( filename, std::ios::out);
-		if (target) {
-			target << filecontent;
-		}
-		else {
-			return false;
-		}
-		return true;
+		TempFileJunkCollector jc{ g_tempTextLocation.data() }; // Cleanup temp file in most usecases
+		{
+			std::ofstream tempTarget(g_tempTextLocation.data(), std::ios::out);
+			tempTarget.exceptions(std::ios::failbit | std::ios::badbit);
+			tempTarget << filecontent;
+		} // tempTarget closed
+
+		fs::copy_file(g_tempTextLocation, filename, fs::copy_options::overwrite_existing);
 	}
 
 	std::string readFirstLineInFile(const std::string& filename) {
