@@ -1,4 +1,5 @@
 #include "IO/fileinteractions.h"
+#include <system_error>
 
 namespace ssl = Updater2::SSL;
 namespace fs = std::filesystem;
@@ -31,12 +32,19 @@ namespace Updater2::IO {
 	} // namespace
 
 	// Clean up stale temp files from crashed or interrupted runs
-	void cleanUpRemainingTempFiles()
+	bool cleanUpRemainingTempFiles()
 	{
-		std::error_code ec; // Fail silently
+		bool isClean{ true }; // We want to get feedback if any of the cleanup calls fail
+		auto updateClean = [&isClean](const std::error_code& ec) noexcept {
+			isClean &= !ec;
+			};
+		std::error_code ec; // Fail silently, it's not a vital call
 		if (fs::exists(g_tempTextLocation, ec)) {
+			updateClean(ec);
 			fs::remove(g_tempTextLocation, ec);
+			updateClean(ec);
 		}
+		return isClean;
 	}
 
 	std::string calculateMd5HashFromFile(const std::string& filename)

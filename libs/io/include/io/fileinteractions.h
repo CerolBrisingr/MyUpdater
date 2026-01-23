@@ -12,7 +12,7 @@
 #include <system_error>
 
 namespace Updater2::IO {
-	void cleanUpRemainingTempFiles();
+	bool cleanUpRemainingTempFiles();
 
 	std::string calculateMd5HashFromFile(const std::string& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);
