@@ -2,3 +2,5 @@
 .vscode/*
 out/*
 TestResults/*
+Testing/*
+**/XMLGoogleTestResults.xml

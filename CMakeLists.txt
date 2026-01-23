@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13) # CMP0079
+cmake_minimum_required(VERSION 3.13) # CMP0079, allow target_link_libraries to access other directories
 cmake_policy(SET CMP0079 NEW)
 project(CustomUpdater VERSION 0.1.0 LANGUAGES CXX)
 
@@ -15,8 +15,15 @@ else()
     find_package(Qt6 REQUIRED COMPONENTS Core)
 endif()
 
+if(Updater2_BUILD_TESTS)
+    find_package(GTest CONFIG REQUIRED)
+    include(CTest)
+endif()
+
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "Install path" FORCE)
-add_subdirectory(src)
+add_subdirectory(libs/io)
+add_subdirectory(tools/list_digest)
+add_subdirectory(app)
 
 if(Updater2_USE_QT_UI)
     target_link_libraries(Updater2 PRIVATE Qt6::Widgets)
@@ -27,17 +34,6 @@ if(Updater2_USE_QT_UI)
     )
 endif()
 
-if(Updater2_BUILD_TESTS)
-    include(FetchContent)
-    FetchContent_Declare(
-      googletest
-      URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
-    )
-    # For Windows: Prevent overriding the parent project's compiler/linker settings
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
-    
-    include(CTest)
-    enable_testing()
-    add_subdirectory(tests)
+if(BUILD_TESTING)
+    #add_subdirectory(app/tests) #Does not exist yet
 endif()
