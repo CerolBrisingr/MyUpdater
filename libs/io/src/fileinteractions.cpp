@@ -1,5 +1,4 @@
 #include "IO/fileinteractions.h"
-#include <system_error>
 
 namespace ssl = Updater2::SSL;
 namespace fs = std::filesystem;
@@ -35,15 +34,8 @@ namespace Updater2::IO {
 	bool cleanUpRemainingTempFiles()
 	{
 		bool isClean{ true }; // We want to get feedback if any of the cleanup calls fail
-		auto updateClean = [&isClean](const std::error_code& ec) noexcept {
-			isClean &= !ec;
-			};
 		std::error_code ec; // Fail silently, it's not a vital call
-		if (fs::exists(g_tempTextLocation, ec)) {
-			updateClean(ec);
-			fs::remove(g_tempTextLocation, ec);
-			updateClean(ec);
-		}
+		removeFileNoThrow(g_tempTextLocation, ec, isClean);
 		return isClean;
 	}
 
@@ -108,6 +100,34 @@ namespace Updater2::IO {
 		std::string out{};
 		std::getline(source, out);
 		return out;
+	}
+
+	std::string readTextFile(const std::string& filename) {
+		std::ifstream source(filename, std::ios::in | std::ios::binary);
+		if (!source) {
+			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
+			throw std::filesystem::filesystem_error("Failed to open file", filename, ec);
+		}
+		return { std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{} };
+	}
+
+	void removeFile(std::string_view filename) {
+		fs::remove(filename);
+	}
+
+	bool removeFileNoThrow(std::string_view filename, bool isClean) noexcept {
+		std::error_code ec{};
+		return removeFileNoThrow(filename, ec, isClean);
+	}
+
+	bool removeFileNoThrow(std::string_view filename, std::error_code& ec, bool isClean) noexcept {
+		// fs::remove() returns true if there was a file, false if not. Both cases are fine with us
+		fs::remove(filename, ec);
+		// update "isClean" status indicator
+		if (ec) {
+			isClean = false;
+		}
+		return isClean;
 	}
 
 } // namespace Updater2::IO

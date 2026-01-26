@@ -22,10 +22,5 @@ target_link_libraries( fileinteraction_test
 		GTest::gtest_main
 )
 
-set(ASSET_DIR ${CMAKE_CURRENT_LIST_DIR}/../test_assets)
-message("Asset_dir " ${ASSET_DIR})
 gtest_discover_tests(ssldigest_test)
-gtest_discover_tests(fileinteraction_test
-	PROPERTIES
-		WORKING_DIRECTORY ${ASSET_DIR}/md5
-)
+gtest_discover_tests(fileinteraction_test)
