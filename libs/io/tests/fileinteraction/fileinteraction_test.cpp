@@ -12,10 +12,10 @@ namespace myfs = Updater2::IO;
 
 namespace {
 	constexpr std::string_view g_md5_source_content{ "Do not change content!" };
-	constexpr std::string_view g_md5_source_name{ "mmd5_target.txt" };
+	constexpr std::string_view g_md5_source_name{ "md5_target.txt" };
 	constexpr std::string_view g_md5_source_hash{ "1ad2ec548147a57a706fac2e1ec7112c" };
 	constexpr std::string_view g_md5_mismatch_content {"Do not change content either!" };
-	constexpr std::string_view g_md5_mismatch_name{ "mmd5_target2.txt" };
+	constexpr std::string_view g_md5_mismatch_name{ "md5_target2.txt" };
 
 	static_assert(g_md5_source_hash.size() == 32, "MD5 hash must be exactly 32 characters!");
 } // namespace
@@ -61,4 +61,12 @@ namespace MD5 {
 		EXPECT_TRUE(myfs::compareMd5Hashes(g_md5_source_hash, md5Calc));
 	}
 
-}
+} // namespace MD5
+
+namespace zip {
+
+	TEST(Unzip, ManualPrep) {
+		EXPECT_TRUE(myfs::unzipArchive("testArchive.7z", "outFolder"));
+	}
+
+} // namespace zip

@@ -21,6 +21,15 @@ target_sources(Updater2
     PRIVATE 
         src/main.cpp)
 
+if(WIN32)
+    add_custom_command(TARGET Updater2 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_RUNTIME_DLLS:Updater2>
+        $<TARGET_FILE_DIR:Updater2>
+        COMMAND_EXPAND_LISTS
+    )
+endif()
+
 #[==[
 
 install(TARGETS Updater2

@@ -1,3 +1,4 @@
+set(X_VCPKG_APPLOCAL_COPY_INSTALL ON CACHE BOOL "Kopiert sekundäre DLLs automatisch beim Installieren")
 cmake_minimum_required(VERSION 3.13) # CMP0079, allow target_link_libraries to access other directories
 cmake_policy(SET CMP0079 NEW)
 project(CustomUpdater VERSION 0.1.0 LANGUAGES CXX)

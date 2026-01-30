@@ -1,7 +1,8 @@
 {
   "dependencies": [
     "openssl",
-    "gtest"
+    "gtest",
+    "bit7z"
   ],
   "features": {
     "wishlist": {
@@ -9,7 +10,6 @@
       "dependencies": [
         "nlohmann-json",
         "curlpp",
-        "bit7z",
         "7zip"
       ]
     }

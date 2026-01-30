@@ -2,6 +2,11 @@
 
 #include "IO/ssldigest.h"
 
+// #define BIT7Z_USE_NATIVE_STRING avoided since vcpkg build comes without it
+// #define BIT7Z_AUTO_FORMAT moved to cmake target_compile_definitions
+#include <bit7z/bitarchivereader.hpp>
+#include <bit7z/bitextractor.hpp>
+
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -13,8 +18,25 @@
 #include <system_error>
 #include <iterator>
 
+/*    
+    bool unzipArchive(QString archive, QString targetPath);
+    bool executeExternalWaiting(QString executablePath, QString working_directory = "");
+    QString calculateHashFromFile(QString sFile);
+    QString readFullFileString(QString filename);
+    QString readFirstFileLine(QString filename);
+    int writeFileString(QString filename, QString filecontent);
+    int removeFile(QString pathstring, QString filename);
+    void copyFolderTo(QString folderPath, QString targetPath);
+    void copyFileTo(QString filePath, QString targetPath);
+    void removeFolder(QString folderPath);
+    void createFolder(QString folderPath);
+*/
+
 namespace Updater2::IO {
 	bool cleanUpRemainingTempFiles();
+
+    bool unzipArchive(const std::filesystem::path& inArchive, const std::filesystem::path& outDir);
+    //bool unzipArchive(const std::string& inArchive, const std::string& outDir);
 
 	std::string calculateMd5HashFromFile(const std::string& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);

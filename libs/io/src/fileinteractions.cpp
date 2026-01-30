@@ -30,6 +30,22 @@ namespace Updater2::IO {
 		};
 	} // namespace
 
+	bool unzipArchive(const fs::path& inArchive, const fs::path& outDir)
+	{
+		try { // bit7z classes can throw BitException objects
+			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			// Opening the archive
+			bit7z::BitExtractor<bit7z::tstring> extractor{ lib, bit7z::BitFormat::Auto };
+			// We can swap to .native() if bit7z is compiled with BIT7Z_USE_NATIVE_STRING
+			//    and BIT7Z_USE_NATIVE_STRING is defined
+			extractor.extract(inArchive.string(), outDir.string());
+		}
+		catch (const bit7z::BitException& ex) {
+			return false;
+		}
+		return true;
+	}
+
 	// Clean up stale temp files from crashed or interrupted runs
 	bool cleanUpRemainingTempFiles()
 	{
