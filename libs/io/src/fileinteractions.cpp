@@ -32,18 +32,38 @@ namespace Updater2::IO {
 
 	bool unzipArchive(const fs::path& inArchive, const fs::path& outDir)
 	{
+		// Looks like bit7z intends to focus on UTF-8 and also vcpkg compiles without BIT7Z_USE_NATIVE_STRING
+		// File paths will therefore use .string()
 		try { // bit7z classes can throw BitException objects
 			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
 			// Opening the archive
-			bit7z::BitExtractor<bit7z::tstring> extractor{ lib, bit7z::BitFormat::Auto };
-			// We can swap to .native() if bit7z is compiled with BIT7Z_USE_NATIVE_STRING
-			//    and BIT7Z_USE_NATIVE_STRING is defined
-			extractor.extract(inArchive.string(), outDir.string());
+			bit7z::BitArchiveReader archive{ lib, inArchive.string(), bit7z::BitFormat::Auto };
+			// Verify archive integrity, throw BitException if invalid
+			archive.test();
+			// Finally: unpack to target folder
+			archive.extractTo(outDir.string());
 		}
-		catch (const bit7z::BitException& ex) {
+		catch ([[maybe_unused]] const bit7z::BitException& ex) {
 			return false;
 		}
 		return true;
+	}
+
+	auto inspectArchive(const std::filesystem::path& archivePath) -> std::optional<Archive::Information> {
+		try {
+			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
+			return Archive::Information{
+				.itemsCount = arc.itemsCount(),
+				.foldersCount = arc.foldersCount(),
+				.filesCount = arc.filesCount(),
+				.packSize = arc.packSize(),
+				.size = arc.size()
+			};
+		}
+		catch ([[maybe_unused]] const bit7z::BitException& ex) {
+			return std::nullopt;
+		}
 	}
 
 	// Clean up stale temp files from crashed or interrupted runs
@@ -144,6 +164,14 @@ namespace Updater2::IO {
 			isClean = false;
 		}
 		return isClean;
+	}
+
+	std::uintmax_t removeFolderRecursively(std::string_view filename) {
+		std::error_code ec{};
+		return removeFolderRecursively(filename, ec);
+	}
+	std::uintmax_t removeFolderRecursively(std::string_view filename, std::error_code& ec) {
+		return fs::remove_all(filename, ec);
 	}
 
 } // namespace Updater2::IO

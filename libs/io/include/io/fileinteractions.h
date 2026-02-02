@@ -5,7 +5,6 @@
 // #define BIT7Z_USE_NATIVE_STRING avoided since vcpkg build comes without it
 // #define BIT7Z_AUTO_FORMAT moved to cmake target_compile_definitions
 #include <bit7z/bitarchivereader.hpp>
-#include <bit7z/bitextractor.hpp>
 
 #include <filesystem>
 #include <iostream>
@@ -17,6 +16,7 @@
 #include <memory>
 #include <system_error>
 #include <iterator>
+#include <stdint.h>
 
 /*    
     bool unzipArchive(QString archive, QString targetPath);
@@ -32,11 +32,21 @@
     void createFolder(QString folderPath);
 */
 
+namespace Updater2::IO::Archive {
+    struct Information {
+        uint32_t itemsCount{ 0 };
+        uint32_t foldersCount{ 0 };
+        uint32_t filesCount{ 0 };
+        uint64_t packSize{ 0 };
+        uint64_t size{ 0 };
+    };
+} // namespace Updater2::IO::Archive
+
 namespace Updater2::IO {
 	bool cleanUpRemainingTempFiles();
 
     bool unzipArchive(const std::filesystem::path& inArchive, const std::filesystem::path& outDir);
-    //bool unzipArchive(const std::string& inArchive, const std::string& outDir);
+    auto inspectArchive(const std::filesystem::path& archivePath) -> std::optional<Archive::Information>;
 
 	std::string calculateMd5HashFromFile(const std::string& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);
@@ -51,6 +61,7 @@ namespace Updater2::IO {
     void removeFile(std::string_view filename);
     bool removeFileNoThrow(std::string_view filename, bool isClean = true) noexcept;
     bool removeFileNoThrow(std::string_view filename, std::error_code& ec, bool isClean = true) noexcept;
-
+    std::uintmax_t removeFolderRecursively(std::string_view filename);
+    std::uintmax_t removeFolderRecursively(std::string_view filename, std::error_code& ec);
 
 } // namespace Updater2::IO
