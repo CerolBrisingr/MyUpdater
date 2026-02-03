@@ -112,7 +112,7 @@ namespace Zip {
 		ASSERT_TRUE(myfs::isFile(std::format("{}/{}", g_extractName, g_name1))) << "Missing unzip target file: " << g_name1;
 		ASSERT_TRUE(myfs::isFile(std::format("{}/{}", g_extractName, g_name2))) << "Missing unzip target file: " << g_name2;
 
-		ASSERT_EQ(3, myfs::removeFolderRecursively(g_extractName)) << "Cleanup count mismatch! Expecting 1 Folder and 2 Files in :" << g_extractName;
+		ASSERT_EQ(3, myfs::removeFolderRecursively(g_extractName)) << "Cleanup count mismatch! Expecting 1 Folder and 2 Files in: " << g_extractName;
 	}
 
 } // namespace zip

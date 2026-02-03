@@ -4,8 +4,10 @@ find_package(unofficial-bit7z CONFIG REQUIRED)
 add_library(Fileinteractions STATIC)
 target_sources(Fileinteractions
     PUBLIC
-        src/fileinteractions.cpp 
-        src/ssldigest.cpp)
+        src/fileinteractions.cpp
+        src/ssldigest.cpp
+        src/filestarter.cpp
+)
 
 target_compile_definitions(Fileinteractions 
     PRIVATE 

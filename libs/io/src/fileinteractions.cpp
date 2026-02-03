@@ -28,6 +28,11 @@ namespace Updater2::IO {
 				fs::remove(path, ec);
 			}
 		};
+
+		bool verifyClean(bool isClean, const std::error_code& ec) {
+			// Return true if isClean and no error code is set
+			return isClean && !ec;
+		}
 	} // namespace
 
 	bool unzipArchive(const fs::path& inArchive, const fs::path& outDir)
@@ -147,6 +152,33 @@ namespace Updater2::IO {
 		return { std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{} };
 	}
 
+	bool copyFileTo(std::string_view filePath, std::string_view targetPath, bool isClean) {
+		std::error_code ec{};
+		return copyFileTo(filePath, targetPath, ec, isClean);
+	}
+
+	bool copyFileTo(std::string_view filePath, std::string_view targetPath, std::error_code& ec, bool isClean) {
+		return fs::copy_file(filePath, targetPath, fs::copy_options::overwrite_existing, ec) && isClean;
+	}
+
+	bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, bool isClean) {
+		std::error_code ec{};
+		return copyFolderInto(folderPath, targetPath, ec, isClean);
+	}
+
+	bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, std::error_code& ec, bool isClean) {
+		fs::copy(folderPath, targetPath, fs::copy_options::skip_existing, ec);
+		return verifyClean(isClean, ec);
+	}
+
+	bool createFolder(std::string_view folderPath, bool isClean) noexcept {
+		std::error_code ec{};
+		return createFolder(folderPath, ec, isClean);
+	}
+	bool createFolder(std::string_view folderPath, std::error_code& ec, bool isClean) noexcept {
+		return fs::create_directory(folderPath) && isClean;  // Try to create directory even if isClean is already false
+	}
+
 	void removeFile(std::string_view filename) {
 		fs::remove(filename);
 	}
@@ -160,10 +192,7 @@ namespace Updater2::IO {
 		// fs::remove() returns true if there was a file, false if not. Both cases are fine with us
 		fs::remove(filename, ec);
 		// update "isClean" status indicator
-		if (ec) {
-			isClean = false;
-		}
-		return isClean;
+		return verifyClean(isClean, ec);
 	}
 
 	std::uintmax_t removeFolderRecursively(std::string_view filename) {

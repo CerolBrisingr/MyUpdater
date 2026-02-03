@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IO/ssldigest.h"
+#include "io/ssldigest.h"
 
 // #define BIT7Z_USE_NATIVE_STRING avoided since vcpkg build comes without it
 // #define BIT7Z_AUTO_FORMAT moved to cmake target_compile_definitions
@@ -18,20 +18,6 @@
 #include <iterator>
 #include <stdint.h>
 
-/*    
-    bool unzipArchive(QString archive, QString targetPath);
-    bool executeExternalWaiting(QString executablePath, QString working_directory = "");
-    QString calculateHashFromFile(QString sFile);
-    QString readFullFileString(QString filename);
-    QString readFirstFileLine(QString filename);
-    int writeFileString(QString filename, QString filecontent);
-    int removeFile(QString pathstring, QString filename);
-    void copyFolderTo(QString folderPath, QString targetPath);
-    void copyFileTo(QString filePath, QString targetPath);
-    void removeFolder(QString folderPath);
-    void createFolder(QString folderPath);
-*/
-
 namespace Updater2::IO::Archive {
     struct Information {
         uint32_t itemsCount{ 0 };
@@ -43,6 +29,9 @@ namespace Updater2::IO::Archive {
 } // namespace Updater2::IO::Archive
 
 namespace Updater2::IO {
+
+    bool createProcess(const std::filesystem::path& processPath, const std::wstring& commandLineArgs);
+
 	bool cleanUpRemainingTempFiles();
 
     bool unzipArchive(const std::filesystem::path& inArchive, const std::filesystem::path& outDir);
@@ -58,6 +47,13 @@ namespace Updater2::IO {
 	std::string readFirstLineInFile(const std::string& filename);
 	std::string readTextFile(const std::string& filename);
 
+    bool copyFileTo(std::string_view filePath, std::string_view targetPath, bool isClean = true);
+    bool copyFileTo(std::string_view filePath, std::string_view targetPath, std::error_code& ec, bool isClean = true);
+    bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, bool isClean = true);
+    bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, std::error_code& ec, bool isClean = true);
+
+    bool createFolder(std::string_view folderPath, bool isClean = true) noexcept;
+    bool createFolder(std::string_view folderPath, std::error_code& ec, bool isClean = true) noexcept;
     void removeFile(std::string_view filename);
     bool removeFileNoThrow(std::string_view filename, bool isClean = true) noexcept;
     bool removeFileNoThrow(std::string_view filename, std::error_code& ec, bool isClean = true) noexcept;
