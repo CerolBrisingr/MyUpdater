@@ -6,8 +6,14 @@ target_sources(Fileinteractions
     PUBLIC
         src/fileinteractions.cpp
         src/ssldigest.cpp
-        src/filestarter.cpp
 )
+
+if (WIN32)
+target_sources(Fileinteractions
+    PUBLIC
+        src/fileinteractions_windows.cpp
+    )
+endif()
 
 target_compile_definitions(Fileinteractions 
     PRIVATE 
