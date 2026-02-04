@@ -45,4 +45,17 @@ add_executable( commandline_printer
 
 add_dependencies(fileinteraction_test commandline_printer)
 
+set(PRINTER_FILE "output.txt")
+
+target_compile_definitions(fileinteraction_test
+    PRIVATE
+        COMMANDLINE_PRINTER="$<TARGET_FILE:commandline_printer>"
+        COMMANDLINE_PRINTER_FILE="${PRINTER_FILE}"
+)
+
+target_compile_definitions(commandline_printer
+    PRIVATE
+        COMMANDLINE_PRINTER_FILE="${PRINTER_FILE}"
+)
+
 gtest_discover_tests(fileinteraction_test)

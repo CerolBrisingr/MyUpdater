@@ -149,14 +149,14 @@ namespace Executable {
 	);
 
 	TEST_P(ExecutableStarterTest, commandline) {
-		ASSERT_TRUE(myfs::removeFileNoThrow("output.txt")) << "Previous output still exists and could not be removed!";
+		ASSERT_TRUE(myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE)) << "Previous output still exists and could not be removed!";
 		const auto& [arguments, verification] = GetParam();
-		bool result = Updater2::IO::createProcess("./commandline_printer.exe", arguments);
+		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, arguments);
 		ASSERT_TRUE(result) << "Failed to run target executable";
-		ASSERT_TRUE(waitForFile("output.txt"));
-		std::string lineString{ myfs::readFirstLineInFile("output.txt") };
-		EXPECT_EQ(lineString, std::format("./commandline_printer.exe {}", verification));
-		myfs::removeFileNoThrow("output.txt");
+		ASSERT_TRUE(waitForFile(COMMANDLINE_PRINTER_FILE));
+		std::string lineString{ myfs::readFirstLineInFile(COMMANDLINE_PRINTER_FILE) };
+		EXPECT_EQ(lineString, std::format("{} {}", COMMANDLINE_PRINTER, verification));
+		myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE);
 	}
 
 } // namespace Executable

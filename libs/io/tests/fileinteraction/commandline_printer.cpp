@@ -2,7 +2,7 @@
 #include <string_view>
 #include <string>
 
-constexpr std::string_view g_filename{ "output.txt" };
+constexpr std::string_view g_filename{ COMMANDLINE_PRINTER_FILE };
 
 int main(int argc, char* argv[]) {
 	std::ofstream target(g_filename.data(), std::ios::binary | std::ios::out);
