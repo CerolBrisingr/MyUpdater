@@ -39,4 +39,10 @@ if(WIN32)
     )
 endif()
 
+add_executable( commandline_printer
+    fileinteraction/commandline_printer.cpp
+)
+
+add_dependencies(fileinteraction_test commandline_printer)
+
 gtest_discover_tests(fileinteraction_test)

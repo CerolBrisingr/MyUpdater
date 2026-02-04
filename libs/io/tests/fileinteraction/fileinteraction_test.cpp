@@ -6,6 +6,8 @@
 #include <string_view>
 #include <system_error>
 #include <bit7z/bitarchivewriter.hpp>
+#include <tuple>
+#include <thread>
 
 #include <gtest/gtest.h>
 
@@ -116,3 +118,45 @@ namespace Zip {
 	}
 
 } // namespace zip
+
+namespace Executable {
+
+	namespace {
+		bool waitForFile(std::string_view fileName) {
+			for (int i = 0; i < 50; ++i) { // Max 5 Sekunden (50 * 100ms)
+				if (std::filesystem::exists(fileName) && std::filesystem::file_size(fileName) > 0) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(100)); // reduce risk of file being still worked on
+					return true;
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
+			return false; // File never showed up
+		}
+	}
+
+	class ExecutableStarterTest 
+		:public ::testing::TestWithParam<std::tuple<std::wstring, std::string>> {
+	};
+
+	using TestParam = std::tuple<std::wstring, std::string> ;
+
+	INSTANTIATE_TEST_SUITE_P(
+		ArgumentGroup, ExecutableStarterTest,
+		testing::Values(
+			TestParam{ L"-verify_this", "-verify_this"},
+			TestParam{ L"\"quoted argument\"", "quoted argument"}
+		)
+	);
+
+	TEST_P(ExecutableStarterTest, commandline) {
+		ASSERT_TRUE(myfs::removeFileNoThrow("output.txt")) << "Previous output still exists and could not be removed!";
+		const auto& [arguments, verification] = GetParam();
+		bool result = Updater2::IO::createProcess("./commandline_printer.exe", arguments);
+		ASSERT_TRUE(result) << "Failed to run target executable";
+		ASSERT_TRUE(waitForFile("output.txt"));
+		std::string lineString{ myfs::readFirstLineInFile("output.txt") };
+		EXPECT_EQ(lineString, std::format("./commandline_printer.exe {}", verification));
+		myfs::removeFileNoThrow("output.txt");
+	}
+
+} // namespace Executable
