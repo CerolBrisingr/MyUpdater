@@ -37,27 +37,27 @@ namespace Updater2::IO {
     bool unzipArchive(const std::filesystem::path& inArchive, const std::filesystem::path& outDir);
     auto inspectArchive(const std::filesystem::path& archivePath) -> std::optional<Archive::Information>;
 
-	std::string calculateMd5HashFromFile(const std::string& filename);
+	std::string calculateMd5HashFromFile(const std::filesystem::path& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);
     
 	void printCurrentPath();
-	bool isFolder(std::string_view path_in);
-	bool isFile(std::string_view path_in);
-	void writeStringAsFile(std::string_view filename, std::string_view filecontent);
-	std::string readFirstLineInFile(const std::string& filename);
-	std::string readTextFile(const std::string& filename);
+	bool isFolder(const std::filesystem::path& path_in);
+	bool isFile(const std::filesystem::path& path_in);
+	void writeStringAsFile(const std::filesystem::path& filename, std::string_view filecontent);
+	std::string readFirstLineInFile(const std::filesystem::path& filename);
+	std::string readTextFile(const std::filesystem::path& filename);
 
-    bool copyFileTo(std::string_view filePath, std::string_view targetPath, bool isClean = true);
-    bool copyFileTo(std::string_view filePath, std::string_view targetPath, std::error_code& ec, bool isClean = true);
-    bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, bool isClean = true);
-    bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, std::error_code& ec, bool isClean = true);
+    bool copyFileTo(const std::filesystem::path& filePath, const std::filesystem::path& targetPath, bool isClean = true);
+    bool copyFileTo(const std::filesystem::path& filePath, const std::filesystem::path& targetPath, std::error_code& ec, bool isClean = true);
+    bool copyFolderInto(const std::filesystem::path& folderPath, const std::filesystem::path& targetPath, bool isClean = true);
+    bool copyFolderInto(const std::filesystem::path& folderPath, const std::filesystem::path& targetPath, std::error_code& ec, bool isClean = true);
 
-    bool createFolder(std::string_view folderPath, bool isClean = true) noexcept;
-    bool createFolder(std::string_view folderPath, std::error_code& ec, bool isClean = true) noexcept;
-    void removeFile(std::string_view filename);
-    bool removeFileNoThrow(std::string_view filename, bool isClean = true) noexcept;
-    bool removeFileNoThrow(std::string_view filename, std::error_code& ec, bool isClean = true) noexcept;
-    std::uintmax_t removeFolderRecursively(std::string_view filename);
-    std::uintmax_t removeFolderRecursively(std::string_view filename, std::error_code& ec);
+    bool createFolder(const std::filesystem::path& folderPath, bool isClean = true) noexcept;
+    bool createFolder(const std::filesystem::path& folderPath, std::error_code& ec, bool isClean = true) noexcept;
+    void removeFile(const std::filesystem::path& filename);
+    bool removeFileNoThrow(const std::filesystem::path& filename, bool isClean = true) noexcept;
+    bool removeFileNoThrow(const std::filesystem::path& filename, std::error_code& ec, bool isClean = true) noexcept;
+    std::uintmax_t removeFolderRecursively(const std::filesystem::path& filename);
+    std::uintmax_t removeFolderRecursively(const std::filesystem::path& filename, std::error_code& ec);
 
 } // namespace Updater2::IO

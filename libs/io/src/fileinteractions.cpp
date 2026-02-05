@@ -10,18 +10,13 @@ namespace Updater2::IO {
 		constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
 
 		struct TempFileJunkCollector {
-			const char* path{ nullptr };
-			explicit TempFileJunkCollector(const char* p)
+			const fs::path path{ "" };
+			explicit TempFileJunkCollector(const fs::path& p)
 				:path{ p }
 			{}
 
 			TempFileJunkCollector(TempFileJunkCollector& rhs) = delete;
 			TempFileJunkCollector& operator= (TempFileJunkCollector& rhs) = delete;
-
-			void release()
-			{
-				path = nullptr;
-			}
 
 			~TempFileJunkCollector() {
 				std::error_code ec;
@@ -32,6 +27,16 @@ namespace Updater2::IO {
 		bool verifyClean(bool isClean, const std::error_code& ec) {
 			// Return true if isClean and no error code is set
 			return isClean && !ec;
+		}
+
+		void ensureParentFolderExists(const fs::path& filename) {
+			if (filename.has_parent_path()) {
+				std::error_code ec;
+				fs::create_directories(filename.parent_path(), ec);
+				if (ec) {
+					throw std::runtime_error("Failed to ensure necessary folder structure: " + ec.message());
+				}
+			}
 		}
 	} // namespace
 
@@ -54,7 +59,7 @@ namespace Updater2::IO {
 		return true;
 	}
 
-	auto inspectArchive(const std::filesystem::path& archivePath) -> std::optional<Archive::Information> {
+	auto inspectArchive(const fs::path& archivePath) -> std::optional<Archive::Information> {
 		try {
 			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
 			bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
@@ -80,7 +85,7 @@ namespace Updater2::IO {
 		return isClean;
 	}
 
-	std::string calculateMd5HashFromFile(const std::string& filename)
+	std::string calculateMd5HashFromFile(const fs::path& filename)
 	{
 		ssl::SslDigest digest{ ssl::SslDigest::Type::MD5 };
 		std::ifstream file(filename, std::ios::binary);
@@ -109,30 +114,31 @@ namespace Updater2::IO {
 		std::cout << "Current path is: \"" << fs::current_path() << "\"\n";
 	}
 
-	bool isFolder(std::string_view path_in)
+	bool isFolder(const fs::path& path_in)
 	{
 		return fs::is_directory(path_in);
 	}
 
-	bool isFile(std::string_view path_in)
+	bool isFile(const fs::path& path_in)
 	{
 		return fs::is_regular_file(path_in);
 	}
 
 	// Write file to temp, remove current if necessary, copy temp to location
-	void writeStringAsFile(std::string_view filename, std::string_view filecontent)
+	void writeStringAsFile(const fs::path& filename, std::string_view filecontent)
 	{
-		TempFileJunkCollector jc{ g_tempTextLocation.data() }; // Cleanup temp file in most usecases
+		ensureParentFolderExists(filename);
+		TempFileJunkCollector tempFile{ g_tempTextLocation }; // Cleanup temp file in most usecases
 		{
-			std::ofstream tempTarget(g_tempTextLocation.data(), std::ios::out);
+			std::ofstream tempTarget(tempFile.path, std::ios::out | std::ios::binary);
 			tempTarget.exceptions(std::ios::failbit | std::ios::badbit);
 			tempTarget << filecontent;
 		} // tempTarget closed
 
-		fs::copy_file(g_tempTextLocation, filename, fs::copy_options::overwrite_existing);
+		fs::copy_file(tempFile.path, filename, fs::copy_options::overwrite_existing);
 	}
 
-	std::string readFirstLineInFile(const std::string& filename) {
+	std::string readFirstLineInFile(const fs::path& filename) {
 		std::ifstream source(filename, std::ios::in);
 		if (!source) {
 			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
@@ -143,7 +149,7 @@ namespace Updater2::IO {
 		return out;
 	}
 
-	std::string readTextFile(const std::string& filename) {
+	std::string readTextFile(const fs::path& filename) {
 		std::ifstream source(filename, std::ios::in | std::ios::binary);
 		if (!source) {
 			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
@@ -152,54 +158,54 @@ namespace Updater2::IO {
 		return { std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{} };
 	}
 
-	bool copyFileTo(std::string_view filePath, std::string_view targetPath, bool isClean) {
+	bool copyFileTo(const fs::path& filePath, const fs::path& targetPath, bool isClean) {
 		std::error_code ec{};
 		return copyFileTo(filePath, targetPath, ec, isClean);
 	}
 
-	bool copyFileTo(std::string_view filePath, std::string_view targetPath, std::error_code& ec, bool isClean) {
+	bool copyFileTo(const fs::path& filePath, const fs::path& targetPath, std::error_code& ec, bool isClean) {
 		return fs::copy_file(filePath, targetPath, fs::copy_options::overwrite_existing, ec) && isClean;
 	}
 
-	bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, bool isClean) {
+	bool copyFolderInto(const fs::path& folderPath, const fs::path& targetPath, bool isClean) {
 		std::error_code ec{};
 		return copyFolderInto(folderPath, targetPath, ec, isClean);
 	}
 
-	bool copyFolderInto(std::string_view folderPath, std::string_view targetPath, std::error_code& ec, bool isClean) {
-		fs::copy(folderPath, targetPath, fs::copy_options::skip_existing, ec);
+	bool copyFolderInto(const fs::path& folderPath, const fs::path& targetPath, std::error_code& ec, bool isClean) {
+		fs::copy(folderPath, targetPath, fs::copy_options::overwrite_existing, ec);
 		return verifyClean(isClean, ec);
 	}
 
-	bool createFolder(std::string_view folderPath, bool isClean) noexcept {
+	bool createFolder(const fs::path& folderPath, bool isClean) noexcept {
 		std::error_code ec{};
 		return createFolder(folderPath, ec, isClean);
 	}
-	bool createFolder(std::string_view folderPath, std::error_code& ec, bool isClean) noexcept {
+	bool createFolder(const fs::path& folderPath, std::error_code& ec, bool isClean) noexcept {
 		return fs::create_directory(folderPath) && isClean;  // Try to create directory even if isClean is already false
 	}
 
-	void removeFile(std::string_view filename) {
+	void removeFile(const fs::path& filename) {
 		fs::remove(filename);
 	}
 
-	bool removeFileNoThrow(std::string_view filename, bool isClean) noexcept {
+	bool removeFileNoThrow(const fs::path& filename, bool isClean) noexcept {
 		std::error_code ec{};
 		return removeFileNoThrow(filename, ec, isClean);
 	}
 
-	bool removeFileNoThrow(std::string_view filename, std::error_code& ec, bool isClean) noexcept {
+	bool removeFileNoThrow(const fs::path& filename, std::error_code& ec, bool isClean) noexcept {
 		// fs::remove() returns true if there was a file, false if not. Both cases are fine with us
 		fs::remove(filename, ec);
 		// update "isClean" status indicator
 		return verifyClean(isClean, ec);
 	}
 
-	std::uintmax_t removeFolderRecursively(std::string_view filename) {
+	std::uintmax_t removeFolderRecursively(const fs::path& filename) {
 		std::error_code ec{};
 		return removeFolderRecursively(filename, ec);
 	}
-	std::uintmax_t removeFolderRecursively(std::string_view filename, std::error_code& ec) {
+	std::uintmax_t removeFolderRecursively(const fs::path& filename, std::error_code& ec) {
 		return fs::remove_all(filename, ec);
 	}
 
