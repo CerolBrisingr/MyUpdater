@@ -81,8 +81,7 @@ namespace Updater2::IO {
 	{
 		bool isClean{ true }; // We want to get feedback if any of the cleanup calls fail
 		std::error_code ec; // Fail silently, it's not a vital call
-		removeFileNoThrow(g_tempTextLocation, ec, isClean);
-		return isClean;
+		return removeFileNoThrow(g_tempTextLocation, ec, isClean);
 	}
 
 	std::string calculateMd5HashFromFile(const fs::path& filename)
