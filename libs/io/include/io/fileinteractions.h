@@ -14,6 +14,7 @@
 #include <memory>
 #include <system_error>
 #include <stdint.h>
+#include <iterator>
 
 namespace Updater2::IO::Archive {
     struct Information {
