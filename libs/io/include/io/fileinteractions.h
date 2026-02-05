@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <memory>
 #include <system_error>
-#include <iterator>
 #include <stdint.h>
 
 namespace Updater2::IO::Archive {
