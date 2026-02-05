@@ -1,5 +1,4 @@
 #include "IO/fileinteractions.h"
-#include <system_error>
 
 namespace ssl = Updater2::SSL;
 namespace fs = std::filesystem;
@@ -11,43 +10,81 @@ namespace Updater2::IO {
 		constexpr std::size_t g_bufferSize{ 1024 * 1024 };  // 1MB
 
 		struct TempFileJunkCollector {
-			const char* path{ nullptr };
-			explicit TempFileJunkCollector(const char* p)
+			const fs::path path{ "" };
+			explicit TempFileJunkCollector(const fs::path& p)
 				:path{ p }
 			{}
 
 			TempFileJunkCollector(TempFileJunkCollector& rhs) = delete;
 			TempFileJunkCollector& operator= (TempFileJunkCollector& rhs) = delete;
 
-			void release()
-			{
-				path = nullptr;
-			}
-
 			~TempFileJunkCollector() {
 				std::error_code ec;
 				fs::remove(path, ec);
 			}
 		};
+
+		bool verifyClean(bool isClean, const std::error_code& ec) {
+			// Return true if isClean and no error code is set
+			return isClean && !ec;
+		}
+
+		void ensureParentFolderExists(const fs::path& filename) {
+			if (filename.has_parent_path()) {
+				std::error_code ec;
+				fs::create_directories(filename.parent_path(), ec);
+				if (ec) {
+					throw std::runtime_error("Failed to ensure necessary folder structure: " + ec.message());
+				}
+			}
+		}
 	} // namespace
+
+	bool unzipArchive(const fs::path& inArchive, const fs::path& outDir)
+	{
+		// Looks like bit7z intends to focus on UTF-8 and also vcpkg compiles without BIT7Z_USE_NATIVE_STRING
+		// File paths will therefore use .string()
+		try { // bit7z classes can throw BitException objects
+			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			// Opening the archive
+			bit7z::BitArchiveReader archive{ lib, inArchive.string(), bit7z::BitFormat::Auto };
+			// Verify archive integrity, throw BitException if invalid
+			archive.test();
+			// Finally: unpack to target folder
+			archive.extractTo(outDir.string());
+		}
+		catch ([[maybe_unused]] const bit7z::BitException& ex) {
+			return false;
+		}
+		return true;
+	}
+
+	auto inspectArchive(const fs::path& archivePath) -> std::optional<Archive::Information> {
+		try {
+			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
+			return Archive::Information{
+				.itemsCount = arc.itemsCount(),
+				.foldersCount = arc.foldersCount(),
+				.filesCount = arc.filesCount(),
+				.packSize = arc.packSize(),
+				.size = arc.size()
+			};
+		}
+		catch ([[maybe_unused]] const bit7z::BitException& ex) {
+			return std::nullopt;
+		}
+	}
 
 	// Clean up stale temp files from crashed or interrupted runs
 	bool cleanUpRemainingTempFiles()
 	{
 		bool isClean{ true }; // We want to get feedback if any of the cleanup calls fail
-		auto updateClean = [&isClean](const std::error_code& ec) noexcept {
-			isClean &= !ec;
-			};
 		std::error_code ec; // Fail silently, it's not a vital call
-		if (fs::exists(g_tempTextLocation, ec)) {
-			updateClean(ec);
-			fs::remove(g_tempTextLocation, ec);
-			updateClean(ec);
-		}
-		return isClean;
+		return removeFileNoThrow(g_tempTextLocation, ec, isClean);
 	}
 
-	std::string calculateMd5HashFromFile(const std::string& filename)
+	std::string calculateMd5HashFromFile(const fs::path& filename)
 	{
 		ssl::SslDigest digest{ ssl::SslDigest::Type::MD5 };
 		std::ifstream file(filename, std::ios::binary);
@@ -71,35 +108,31 @@ namespace Updater2::IO {
 		return hash1.compare( hash2 ) == 0;
 	}
 
-	void printCurrentPath()
-	{
-		std::cout << "Current path is: \"" << fs::current_path() << "\"\n";
-	}
-
-	bool isFolder(std::string_view path_in)
+	bool isFolder(const fs::path& path_in)
 	{
 		return fs::is_directory(path_in);
 	}
 
-	bool isFile(std::string_view path_in)
+	bool isFile(const fs::path& path_in)
 	{
 		return fs::is_regular_file(path_in);
 	}
 
 	// Write file to temp, remove current if necessary, copy temp to location
-	void writeStringAsFile(std::string_view filename, std::string_view filecontent)
+	void writeStringAsFile(const fs::path& filename, std::string_view filecontent)
 	{
-		TempFileJunkCollector jc{ g_tempTextLocation.data() }; // Cleanup temp file in most usecases
+		ensureParentFolderExists(filename);
+		TempFileJunkCollector tempFile{ g_tempTextLocation }; // Cleanup temp file in most usecases
 		{
-			std::ofstream tempTarget(g_tempTextLocation.data(), std::ios::out);
+			std::ofstream tempTarget(tempFile.path, std::ios::out | std::ios::binary);
 			tempTarget.exceptions(std::ios::failbit | std::ios::badbit);
 			tempTarget << filecontent;
 		} // tempTarget closed
 
-		fs::copy_file(g_tempTextLocation, filename, fs::copy_options::overwrite_existing);
+		fs::copy_file(tempFile.path, filename, fs::copy_options::overwrite_existing);
 	}
 
-	std::string readFirstLineInFile(const std::string& filename) {
+	std::string readFirstLineInFile(const fs::path& filename) {
 		std::ifstream source(filename, std::ios::in);
 		if (!source) {
 			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
@@ -108,6 +141,66 @@ namespace Updater2::IO {
 		std::string out{};
 		std::getline(source, out);
 		return out;
+	}
+
+	std::string readTextFile(const fs::path& filename) {
+		std::ifstream source(filename, std::ios::in | std::ios::binary);
+		if (!source) {
+			const std::error_code ec{ std::make_error_code(std::errc::io_error) };
+			throw std::filesystem::filesystem_error("Failed to open file", filename, ec);
+		}
+		return { std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{} };
+	}
+
+	bool copyFileTo(const fs::path& filePath, const fs::path& targetPath, bool isClean) {
+		std::error_code ec{};
+		return copyFileTo(filePath, targetPath, ec, isClean);
+	}
+
+	bool copyFileTo(const fs::path& filePath, const fs::path& targetPath, std::error_code& ec, bool isClean) {
+		return fs::copy_file(filePath, targetPath, fs::copy_options::overwrite_existing, ec) && isClean;
+	}
+
+	bool copyFolderInto(const fs::path& folderPath, const fs::path& targetPath, bool isClean) {
+		std::error_code ec{};
+		return copyFolderInto(folderPath, targetPath, ec, isClean);
+	}
+
+	bool copyFolderInto(const fs::path& folderPath, const fs::path& targetPath, std::error_code& ec, bool isClean) {
+		fs::copy(folderPath, targetPath, fs::copy_options::overwrite_existing, ec);
+		return verifyClean(isClean, ec);
+	}
+
+	bool createFolder(const fs::path& folderPath, bool isClean) noexcept {
+		std::error_code ec{};
+		return createFolder(folderPath, ec, isClean);
+	}
+	bool createFolder(const fs::path& folderPath, std::error_code& ec, bool isClean) noexcept {
+		return fs::create_directory(folderPath) && isClean;  // Try to create directory even if isClean is already false
+	}
+
+	void removeFile(const fs::path& filename) {
+		fs::remove(filename);
+	}
+
+	bool removeFileNoThrow(const fs::path& filename, bool isClean) noexcept {
+		std::error_code ec{};
+		return removeFileNoThrow(filename, ec, isClean);
+	}
+
+	bool removeFileNoThrow(const fs::path& filename, std::error_code& ec, bool isClean) noexcept {
+		// fs::remove() returns true if there was a file, false if not. Both cases are fine with us
+		fs::remove(filename, ec);
+		// update "isClean" status indicator
+		return verifyClean(isClean, ec);
+	}
+
+	std::uintmax_t removeFolderRecursively(const fs::path& filename) {
+		std::error_code ec{};
+		return removeFolderRecursively(filename, ec);
+	}
+	std::uintmax_t removeFolderRecursively(const fs::path& filename, std::error_code& ec) {
+		return fs::remove_all(filename, ec);
 	}
 
 } // namespace Updater2::IO
