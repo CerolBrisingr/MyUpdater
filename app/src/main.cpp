@@ -11,7 +11,6 @@ int main()
     int test{ 10 };
     std::cout << "Hello world!\n";
     printHello();
-    IO::printCurrentPath();
 
     return 0;
 }

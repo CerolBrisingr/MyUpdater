@@ -109,11 +109,6 @@ namespace Updater2::IO {
 		return hash1.compare( hash2 ) == 0;
 	}
 
-	void printCurrentPath()
-	{
-		std::cout << "Current path is: \"" << fs::current_path() << "\"\n";
-	}
-
 	bool isFolder(const fs::path& path_in)
 	{
 		return fs::is_directory(path_in);
