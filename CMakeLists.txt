@@ -33,6 +33,7 @@ target_compile_options(project_warnings INTERFACE
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "Install path" FORCE)
 add_subdirectory(libs/io)
+add_subdirectory(libs/net)
 add_subdirectory(tools/list_digest)
 add_subdirectory(app)
 
