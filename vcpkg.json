@@ -1,16 +1,14 @@
 {
   "dependencies": [
     "openssl",
-    "gtest",
-    "bit7z"
+    "gtest"
   ],
   "features": {
     "wishlist": {
       "description": "Dependencies I am eying for the future",
       "dependencies": [
         "nlohmann-json",
-        "curlpp",
-        "7zip"
+        "curlpp"
       ]
     }
   }

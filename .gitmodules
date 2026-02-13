@@ -1,0 +1,3 @@
+[submodule "exernal/bit7z"]
+	path = libs/io/external/bit7z
+	url = git@github.com:rikyoz/bit7z.git

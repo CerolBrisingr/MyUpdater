@@ -7,7 +7,11 @@ target_compile_options(fileinteractions_strict_project_warnings INTERFACE
 )
 
 find_package(OpenSSL REQUIRED)
-find_package(unofficial-bit7z CONFIG REQUIRED)
+
+# Build bit7z
+set(BIT7Z_AUTO_FORMAT ON CACHE INTERNAL "" FORCE)
+set(BIT7Z_DETECT_FROM_EXTENSION OFF CACHE INTERNAL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/external/bit7z)
 
 add_library(Fileinteractions STATIC)
 target_sources(Fileinteractions
@@ -35,7 +39,7 @@ target_include_directories(Fileinteractions
 target_link_libraries(Fileinteractions
     PUBLIC
         OpenSSL::Crypto
-        unofficial::bit7z::bit7z64)
+        bit7z)
 
 if(FILEINTERACTIONS_STRICT_WARNINGS)
     target_link_libraries(Fileinteractions
