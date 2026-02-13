@@ -1,5 +1,7 @@
-set(X_VCPKG_APPLOCAL_COPY_INSTALL ON CACHE BOOL "Kopiert sekundäre DLLs automatisch beim Installieren")
-cmake_minimum_required(VERSION 3.13) # CMP0079, allow target_link_libraries to access other directories
+if(MSVC)
+    set(X_VCPKG_APPLOCAL_COPY_INSTALL ON CACHE BOOL "Kopiert sekundäre DLLs automatisch beim Installieren")
+endif()
+cmake_minimum_required(VERSION 3.21) # CMP0079, allow target_link_libraries to access other directories
 cmake_policy(SET CMP0079 NEW)
 project(CustomUpdater VERSION 0.1.0 LANGUAGES CXX)
 
@@ -20,6 +22,13 @@ if(Updater2_BUILD_TESTS)
     find_package(GTest CONFIG REQUIRED)
     include(CTest)
 endif()
+
+# Easy setup for compiler flags (avoid using in /libs)
+add_library(project_warnings INTERFACE)
+target_compile_options(project_warnings INTERFACE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Werror>
+)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "Install path" FORCE)
 add_subdirectory(libs/io)

@@ -8,5 +8,6 @@ if (Updater2_SSL_BUILD_DIGEST_LIST)
             list_digest.cpp)
     target_link_libraries(SSLDigestNameLister
         PRIVATE
+            project_warnings
             OpenSSL::Crypto)
 endif()

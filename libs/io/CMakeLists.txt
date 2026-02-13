@@ -1,3 +1,11 @@
+option(FILEINTERACTIONS_STRICT_WARNINGS "Build with strict warnings" ON)
+
+add_library(fileinteractions_strict_project_warnings INTERFACE)
+target_compile_options(fileinteractions_strict_project_warnings INTERFACE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Werror>
+)
+
 find_package(OpenSSL REQUIRED)
 find_package(unofficial-bit7z CONFIG REQUIRED)
 
@@ -28,6 +36,13 @@ target_link_libraries(Fileinteractions
     PUBLIC
         OpenSSL::Crypto
         unofficial::bit7z::bit7z64)
+
+if(FILEINTERACTIONS_STRICT_WARNINGS)
+    target_link_libraries(Fileinteractions
+        PRIVATE
+            fileinteractions_strict_project_warnings
+    )
+endif()
         
 if (BUILD_TESTING)
     add_subdirectory(tests)

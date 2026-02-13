@@ -175,7 +175,7 @@ namespace Updater2::IO {
 		std::error_code ec{};
 		return createFolder(folderPath, ec, isClean);
 	}
-	bool createFolder(const fs::path& folderPath, std::error_code& ec, bool isClean) noexcept {
+	bool createFolder(const fs::path& folderPath, std::error_code&, bool isClean) noexcept {
 		return fs::create_directory(folderPath) && isClean;  // Try to create directory even if isClean is already false
 	}
 

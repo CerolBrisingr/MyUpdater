@@ -25,7 +25,7 @@ target_link_libraries( fileinteraction_test
 		GTest::gtest_main
 )
 
-target_compile_definitions(Fileinteractions 
+target_compile_definitions(fileinteraction_test 
     PRIVATE 
         BIT7Z_AUTO_FORMAT
 )
@@ -57,5 +57,16 @@ target_compile_definitions(commandline_printer
     PRIVATE
         COMMANDLINE_PRINTER_FILE="${PRINTER_FILE}"
 )
+
+if(FILEINTERACTIONS_STRICT_WARNINGS)
+    target_link_libraries(fileinteraction_test
+        PRIVATE
+            fileinteractions_strict_project_warnings
+    )
+    target_link_libraries(commandline_printer
+        PRIVATE
+            fileinteractions_strict_project_warnings
+    )
+endif()
 
 gtest_discover_tests(fileinteraction_test)
