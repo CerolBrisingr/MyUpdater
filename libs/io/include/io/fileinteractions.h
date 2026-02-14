@@ -13,8 +13,9 @@
 #include <cstddef>
 #include <memory>
 #include <system_error>
-#include <stdint.h>
+#include <cstdint>
 #include <iterator>
+#include <vector>
 
 namespace Updater2::IO::Archive {
     struct Information {
@@ -27,8 +28,9 @@ namespace Updater2::IO::Archive {
 } // namespace Updater2::IO::Archive
 
 namespace Updater2::IO {
+	using stringList = std::vector<std::string>;
 
-    bool createProcess(const std::filesystem::path& processPath, const std::wstring& commandLineArgs);
+    bool createProcess(const std::filesystem::path& processPath, const stringList& commandLineArgs);
 
 	bool cleanUpRemainingTempFiles();
 

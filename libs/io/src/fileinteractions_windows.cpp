@@ -3,6 +3,32 @@
 
 namespace Updater2::IO {
 
+
+    bool createProcess(const std::filesystem::path& executable, const stringList& args) {
+        // 1. Kommandozeile für Windows bauen
+        std::wstring cmd = L"\"" + executable.wstring() + L"\"";
+        for (const auto& arg : args) {
+            std::wstring wArg = std::filesystem::path(arg).wstring();
+            if (wArg.find(L' ') != std::wstring::npos) wArg = L"\"" + wArg + L"\"";
+            cmd += L" " + wArg;
+        }
+
+        STARTUPINFOW si = { sizeof(si) };
+        PROCESS_INFORMATION pi = { 0 };
+        std::vector<wchar_t> buffer(cmd.begin(), cmd.end());
+        buffer.push_back(0);
+
+        if (CreateProcessW(NULL, buffer.data(), NULL, NULL, FALSE,
+                           DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+                           NULL, NULL, &si, &pi)) {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+            return true; // Hauptprogramm läuft hier einfach weiter
+                           }
+        return false;
+    }
+
+    // TODO: remove
     bool createProcess(const std::filesystem::path& processPath, const std::wstring& commandLineArgs) {
 
         STARTUPINFOW si{ sizeof(si) };
