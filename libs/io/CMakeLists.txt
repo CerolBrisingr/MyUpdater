@@ -14,15 +14,18 @@ set(BIT7Z_DETECT_FROM_EXTENSION OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/external/bit7z)
 
 # Find 7zip library
-block(PROPAGATE LIB_7Z_PATH)
-    set(CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES};")
-
+if(WIN32 AND VCPKG_TOOLCHAIN)
     find_library(LIB_7Z_PATH
-            NAMES 7z 7zip
-            PATHS "/usr/lib/7zip" "/usr/local/lib/7zip"
+            NAMES 7z
+            PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin"
             REQUIRED
     )
-endblock()
+else()
+    block(PROPAGATE LIB_7Z_PATH)
+        set(CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES};")
+        find_library(LIB_7Z_PATH NAMES 7z PATHS "/usr/lib/7zip" "/usr/local/lib/7zip" REQUIRED)
+    endblock()
+endif()
 
 add_library(Fileinteractions STATIC)
 target_sources(Fileinteractions
