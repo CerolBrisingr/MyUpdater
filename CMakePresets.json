@@ -44,7 +44,7 @@
     {
       "name": "linux-x64-release",
       "displayName": "x64 Release Linux",
-      "description": "x64 relese builds for Linux",
+      "description": "x64 release builds for Linux",
       "inherits": "linux-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",

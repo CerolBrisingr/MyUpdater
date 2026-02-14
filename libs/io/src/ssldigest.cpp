@@ -1,4 +1,4 @@
-#include "IO/ssldigest.h"
+#include "io/ssldigest.h"
 
 namespace Updater2::SSL {
 
@@ -15,8 +15,6 @@ namespace Updater2::SSL {
 			throw std::runtime_error("EVP_DigestInit_ex failed");
 		}
 	}
-
-	SslDigest::~SslDigest() {}
 
 	SslDigest::SslDigest(const SslDigest& rhs) 
 	{
@@ -90,8 +88,8 @@ namespace Updater2::SSL {
 	}
 
 	const EVP_MD* SslDigest::getMd5() {
-		static OSSL_PROVIDER* legacy = OSSL_PROVIDER_load(NULL, "legacy");
-		static OSSL_PROVIDER* default_provider = OSSL_PROVIDER_load(NULL, "default");
+		[[maybe_unused]] static OSSL_PROVIDER* legacy = OSSL_PROVIDER_load(NULL, "legacy");
+		[[maybe_unused]] static OSSL_PROVIDER* default_provider = OSSL_PROVIDER_load(NULL, "default");
 		return EVP_md5();
 	}
 

@@ -21,9 +21,14 @@ target_sources(Fileinteractions
 )
 
 if (WIN32)
-target_sources(Fileinteractions
-    PUBLIC
-        src/fileinteractions_windows.cpp
+    target_sources(Fileinteractions
+        PUBLIC
+            src/fileinteractions_windows.cpp
+        )
+else()
+    target_sources(Fileinteractions
+        PUBLIC
+            src/fileinteractions_linux.cpp
     )
 endif()
 
