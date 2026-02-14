@@ -105,7 +105,7 @@ namespace Updater2::IO {
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2)
 	{
 		// TODO: remove case sensitivity and irrelevant characters
-		return hash1.compare( hash2 ) == 0;
+		return hash1 == hash2;
 	}
 
 	bool isFolder(const fs::path& path_in)
@@ -167,7 +167,11 @@ namespace Updater2::IO {
 	}
 
 	bool copyFolderInto(const fs::path& folderPath, const fs::path& targetPath, std::error_code& ec, bool isClean) {
-		fs::copy(folderPath, targetPath, fs::copy_options::overwrite_existing, ec);
+		if (!isFolder(folderPath)) return false;
+		fs::create_directories(targetPath, ec);
+		if (ec) return false;
+		if (!isFolder(targetPath)) return false;
+		fs::copy(folderPath, targetPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
 		return verifyClean(isClean, ec);
 	}
 
@@ -175,8 +179,8 @@ namespace Updater2::IO {
 		std::error_code ec{};
 		return createFolder(folderPath, ec, isClean);
 	}
-	bool createFolder(const fs::path& folderPath, std::error_code&, bool isClean) noexcept {
-		return fs::create_directory(folderPath) && isClean;  // Try to create directory even if isClean is already false
+	bool createFolder(const fs::path& folderPath, std::error_code& ec, bool isClean) noexcept {
+		return fs::create_directories(folderPath, ec) && isClean;  // Try to create directory even if isClean is already false
 	}
 
 	void removeFile(const fs::path& filename) {
