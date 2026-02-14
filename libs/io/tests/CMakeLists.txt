@@ -51,6 +51,7 @@ target_compile_definitions(fileinteraction_test
     PRIVATE
         COMMANDLINE_PRINTER="$<TARGET_FILE:commandline_printer>"
         COMMANDLINE_PRINTER_FILE="${PRINTER_FILE}"
+        LIB_7Z_SHARED_LIBRARY_PATH="${LIB_7Z_PATH}"
 )
 
 target_compile_definitions(commandline_printer

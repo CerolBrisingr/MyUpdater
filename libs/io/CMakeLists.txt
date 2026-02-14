@@ -13,6 +13,17 @@ set(BIT7Z_AUTO_FORMAT ON CACHE INTERNAL "" FORCE)
 set(BIT7Z_DETECT_FROM_EXTENSION OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/external/bit7z)
 
+# Find 7zip library
+block(PROPAGATE LIB_7Z_PATH)
+    set(CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES};")
+
+    find_library(LIB_7Z_PATH
+            NAMES 7z 7zip
+            PATHS "/usr/lib/7zip" "/usr/local/lib/7zip"
+            REQUIRED
+    )
+endblock()
+
 add_library(Fileinteractions STATIC)
 target_sources(Fileinteractions
     PUBLIC
@@ -32,9 +43,12 @@ else()
     )
 endif()
 
+message(STATUS "7-Zip Binary used: ${LIB_7Z_PATH}")
+
 target_compile_definitions(Fileinteractions 
-    PRIVATE 
+    PUBLIC
         BIT7Z_AUTO_FORMAT
+        LIB_7Z_SHARED_LIBRARY_PATH="${LIB_7Z_PATH}"
 )
 
 target_include_directories(Fileinteractions

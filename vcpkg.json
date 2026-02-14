@@ -1,7 +1,8 @@
 {
   "dependencies": [
     "openssl",
-    "gtest"
+    "gtest",
+    "7zip"
   ],
   "features": {
     "wishlist": {

@@ -76,7 +76,7 @@ namespace Zip {
 	namespace {
 		void buildArchive() {
 			// Not catching anything here. If it throws, the test fails.
-			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			bit7z::Bit7zLibrary lib(BIT7Z_STRING(LIB_7Z_SHARED_LIBRARY_PATH));
 			bit7z::BitArchiveWriter archive{ lib, bit7z::BitFormat::SevenZip };
 			archive.addFile(g_name1.data());
 			archive.addFile(g_name2.data());

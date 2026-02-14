@@ -1,5 +1,9 @@
 #include "io/fileinteractions.h"
 
+#ifndef LIB_7Z_SHARED_LIBRARY_PATH
+#error "Missing library path macro"
+#endif
+
 namespace ssl = Updater2::SSL;
 namespace fs = std::filesystem;
 
@@ -45,7 +49,7 @@ namespace Updater2::IO {
 		// Looks like bit7z intends to focus on UTF-8 and also vcpkg compiles without BIT7Z_USE_NATIVE_STRING
 		// File paths will therefore use .string()
 		try { // bit7z classes can throw BitException objects
-			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			bit7z::Bit7zLibrary lib(BIT7Z_STRING(LIB_7Z_SHARED_LIBRARY_PATH));
 			// Opening the archive
 			bit7z::BitArchiveReader archive{ lib, inArchive.string(), bit7z::BitFormat::Auto };
 			// Verify archive integrity, throw BitException if invalid
@@ -61,8 +65,8 @@ namespace Updater2::IO {
 
 	auto inspectArchive(const fs::path& archivePath) -> std::optional<Archive::Information> {
 		try {
-			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
-			bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
+			const bit7z::Bit7zLibrary lib(BIT7Z_STRING(LIB_7Z_SHARED_LIBRARY_PATH));
+			const bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
 			return Archive::Information{
 				.itemsCount = arc.itemsCount(),
 				.foldersCount = arc.foldersCount(),
