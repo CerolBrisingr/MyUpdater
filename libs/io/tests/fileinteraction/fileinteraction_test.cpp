@@ -14,6 +14,23 @@
 namespace myfs = Updater2::IO;
 namespace fs = std::filesystem;
 
+template <typename T, std::size_t ID>
+struct TestNameGenerator {
+	std::string operator()(const testing::TestParamInfo <T>& info) const {
+		// Picking second element, "verification", as name
+		std::string name = std::get<ID>(info.param);
+
+		// Remove spaces to conform to google test text layout (don't like crashes)
+		for (char& c : name) {
+			if (!std::isalnum(static_cast<unsigned char>(c))) {
+				c = '_';
+			}
+		}
+
+		return name;
+	}
+};
+
 namespace MD5 {
 
 	namespace {
@@ -122,23 +139,30 @@ namespace Zip {
 namespace Executable {
 
 	namespace {
+		using namespace std::chrono_literals;
 		bool waitForFile(std::string_view fileName) {
-			for (int i = 0; i < 50; ++i) { // Max 5 Sekunden (50 * 100ms)
+			const auto timeout = 5s;
+			const auto interval = 100ms;
+			const auto start = std::chrono::steady_clock::now();
+
+			while (std::chrono::steady_clock::now() - start < timeout) {
 				if (fs::exists(fileName) && fs::file_size(fileName) > 0) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(100)); // reduce risk of file being still worked on
+					// reduce risk of file being still worked on
+					std::this_thread::sleep_for(100ms);
 					return true;
 				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				std::this_thread::sleep_for(interval);
 			}
 			return false; // File never showed up
 		}
-	}
+	} // namespace
 
 	class ExecutableStarterTest
 		:public ::testing::TestWithParam<std::tuple<std::vector<std::string>, std::string>> {
 	};
 
 	using TestParam = std::tuple<std::vector<std::string>, std::string>;
+	using MyNameGenerator = TestNameGenerator<TestParam, 1>;
 	inline std::vector<TestParam> params = {
 		TestParam{ {"-verify_this"}, "-verify_this"},
 #ifdef _WIN32
@@ -148,8 +172,10 @@ namespace Executable {
 	};
 
 	INSTANTIATE_TEST_SUITE_P(
-		ArgumentGroup, ExecutableStarterTest,
-		testing::ValuesIn(params)
+		StandardRunner,
+		ExecutableStarterTest,
+		testing::ValuesIn(params),
+		MyNameGenerator()
 	);
 
 	TEST_P(ExecutableStarterTest, commandline) {
