@@ -15,9 +15,10 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/external/bit7z)
 
 # Find 7zip library
 if(WIN32 AND VCPKG_TOOLCHAIN)
-    find_library(LIB_7Z_PATH
-            NAMES 7z
+    find_file(LIB_7Z_PATH
+            NAMES 7z.dll 7zip.dll
             PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin"
+            NO_DEFAULT_PATH
             REQUIRED
     )
 else()
