@@ -157,7 +157,7 @@ namespace Executable {
 		const auto& [arguments, verification] = GetParam();
 		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, arguments);
 		ASSERT_TRUE(result) << "Failed to run target executable";
-		ASSERT_TRUE(waitForFile(COMMANDLINE_PRINTER_FILE));
+		ASSERT_TRUE(waitForFile(COMMANDLINE_PRINTER_FILE)); // We're testing a detached start
 		std::string lineString{ myfs::readFirstLineInFile(COMMANDLINE_PRINTER_FILE) };
 		EXPECT_EQ(lineString, std::format("{} {}", COMMANDLINE_PRINTER, verification));
 		myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE);
