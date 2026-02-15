@@ -134,18 +134,22 @@ namespace Executable {
 		}
 	}
 
-	class ExecutableStarterTest 
+	class ExecutableStarterTest
 		:public ::testing::TestWithParam<std::tuple<std::vector<std::string>, std::string>> {
 	};
 
-	using TestParam = std::tuple<std::vector<std::string>, std::string> ;
+	using TestParam = std::tuple<std::vector<std::string>, std::string>;
+	inline std::vector<TestParam> params = {
+		TestParam{ {"-verify_this"}, "-verify_this"},
+#ifdef _WIN32
+		TestParam{ {"\"quoted argument\""}, "quoted argument" },
+#endif
+		TestParam{ {"multiple", "arguments"}, "multiple arguments"}
+	};
 
 	INSTANTIATE_TEST_SUITE_P(
 		ArgumentGroup, ExecutableStarterTest,
-		testing::Values(
-			TestParam{ {"-verify_this"}, "-verify_this"},
-			TestParam{ {"\"quoted argument\""}, "quoted argument"}
-		)
+		testing::ValuesIn(params)
 	);
 
 	TEST_P(ExecutableStarterTest, commandline) {
