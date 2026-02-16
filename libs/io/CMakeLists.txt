@@ -2,7 +2,7 @@ option(FILEINTERACTIONS_STRICT_WARNINGS "Build with strict warnings" ON)
 
 add_library(fileinteractions_strict_project_warnings INTERFACE)
 target_compile_options(fileinteractions_strict_project_warnings INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /utf-8>
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Werror>
 )
 

@@ -27,7 +27,7 @@ endif()
 # Easy setup for compiler flags (avoid using in /libs)
 add_library(project_warnings INTERFACE)
 target_compile_options(project_warnings INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /utf-8>
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Werror>
 )
 
