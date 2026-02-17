@@ -21,11 +21,6 @@ if(WIN32 AND VCPKG_TOOLCHAIN)
             NO_DEFAULT_PATH
             REQUIRED
     )
-    # TODO: Extract pure filename (e.g., 7z.dll) for runtime loading
-    # get_filename_component(7Z_LIB_FILENAME "${7Z_DLL_PATH}" NAME)
-    # Move dll file to executable (custom_command)
-    # Prepare for install
-    # Put that repetitive stuff in a function
 else()
     block(PROPAGATE LIB_7Z_PATH)
         set(CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES};")
