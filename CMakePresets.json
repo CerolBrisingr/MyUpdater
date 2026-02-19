@@ -2,17 +2,67 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "windows-base",
-      "description": "Hiermit wird Windows mit der Visual Studio-Entwicklungsumgebung als Ziel verwendet.",
+      "name": "base",
+      "description": "All builds should share this",
       "hidden": true,
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "Updater2_SSL_BUILD_DIGEST_LIST": "OFF"
+      }
+    },
+    {
+      "name": "linux-base",
+      "description": "Basic setup for linux environment",
+      "inherits": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-x64-debug",
+      "displayName": "x64 Debug Linux",
+      "description": "x64 debug builds for linux",
+      "inherits": "linux-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "Updater2_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "linux-x64-release",
+      "displayName": "x64 Release Linux",
+      "description": "x64 release builds for Linux",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "Updater2_BUILD_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "windows-base",
+      "description": "Hiermit wird Windows mit der Visual Studio-Entwicklungsumgebung als Ziel verwendet.",
+      "inherits": "base",
+      "hidden": true,
+      "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "Updater2_SSL_BUILD_DIGEST_LIST": "OFF"
+        "Updater2_SSL_BUILD_DIGEST_LIST": "OFF",
+        "CMAKE_MSVC_WARNING_LEVEL": "Level4"
       },
       "condition": {
         "type": "equals",

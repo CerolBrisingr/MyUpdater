@@ -1,5 +1,32 @@
+option(FILEINTERACTIONS_STRICT_WARNINGS "Build with strict warnings" ON)
+
+add_library(fileinteractions_strict_project_warnings INTERFACE)
+target_compile_options(fileinteractions_strict_project_warnings INTERFACE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /utf-8>
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Werror>
+)
+
 find_package(OpenSSL REQUIRED)
-find_package(unofficial-bit7z CONFIG REQUIRED)
+
+# Build bit7z
+set(BIT7Z_AUTO_FORMAT ON CACHE INTERNAL "" FORCE)
+set(BIT7Z_DETECT_FROM_EXTENSION OFF CACHE INTERNAL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/external/bit7z)
+
+# Find 7zip library
+if(WIN32 AND VCPKG_TOOLCHAIN)
+    find_file(LIB_7Z_PATH
+            NAMES 7z.dll 7zip.dll
+            PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin"
+            NO_DEFAULT_PATH
+            REQUIRED
+    )
+else()
+    block(PROPAGATE LIB_7Z_PATH)
+        set(CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES};")
+        find_library(LIB_7Z_PATH NAMES 7z PATHS "/usr/lib/7zip" "/usr/local/lib/7zip" REQUIRED)
+    endblock()
+endif()
 
 add_library(Fileinteractions STATIC)
 target_sources(Fileinteractions
@@ -9,15 +36,23 @@ target_sources(Fileinteractions
 )
 
 if (WIN32)
-target_sources(Fileinteractions
-    PUBLIC
-        src/fileinteractions_windows.cpp
+    target_sources(Fileinteractions
+        PUBLIC
+            src/fileinteractions_windows.cpp
+        )
+else()
+    target_sources(Fileinteractions
+        PUBLIC
+            src/fileinteractions_linux.cpp
     )
 endif()
 
+message(STATUS "7-Zip Binary used: ${LIB_7Z_PATH}")
+
 target_compile_definitions(Fileinteractions 
-    PRIVATE 
+    PUBLIC
         BIT7Z_AUTO_FORMAT
+        LIB_7Z_SHARED_LIBRARY_PATH="${LIB_7Z_PATH}"
 )
 
 target_include_directories(Fileinteractions
@@ -27,7 +62,14 @@ target_include_directories(Fileinteractions
 target_link_libraries(Fileinteractions
     PUBLIC
         OpenSSL::Crypto
-        unofficial::bit7z::bit7z64)
+        bit7z)
+
+if(FILEINTERACTIONS_STRICT_WARNINGS)
+    target_link_libraries(Fileinteractions
+        PRIVATE
+            fileinteractions_strict_project_warnings
+    )
+endif()
         
 if (BUILD_TESTING)
     add_subdirectory(tests)

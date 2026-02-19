@@ -17,7 +17,7 @@ namespace Updater2::SSL {
 
 	class SslDigest {
 	private:
-		// Helper must be decleared ahead of Macro expansion
+		// Helper must be declared ahead of Macro expansion
 		static const EVP_MD* getMd5();
 	public:		// enum class Type needs to be exposed
 		// This interface begrudgingly uses X-Macros
@@ -50,7 +50,7 @@ namespace Updater2::SSL {
 	public: // Ugly stuff is done.
 
 		explicit SslDigest(SslDigest::Type digestType);
-		~SslDigest() noexcept;
+		~SslDigest() noexcept = default;
 
 		SslDigest(const SslDigest& rhs);
 		SslDigest& operator= (const SslDigest& rhs);

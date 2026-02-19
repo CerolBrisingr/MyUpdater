@@ -14,6 +14,7 @@ qt_add_executable(Updater2)
 
 target_link_libraries(Updater2
     PRIVATE
+        project_warnings
         Updater2_Core
         Fileinteractions)
 

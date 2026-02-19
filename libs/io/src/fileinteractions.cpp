@@ -1,4 +1,8 @@
-#include "IO/fileinteractions.h"
+#include "io/fileinteractions.h"
+
+#ifndef LIB_7Z_SHARED_LIBRARY_PATH
+#error "Missing library path macro"
+#endif
 
 namespace ssl = Updater2::SSL;
 namespace fs = std::filesystem;
@@ -45,9 +49,9 @@ namespace Updater2::IO {
 		// Looks like bit7z intends to focus on UTF-8 and also vcpkg compiles without BIT7Z_USE_NATIVE_STRING
 		// File paths will therefore use .string()
 		try { // bit7z classes can throw BitException objects
-			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
+			const bit7z::Bit7zLibrary lib(BIT7Z_STRING(LIB_7Z_SHARED_LIBRARY_PATH));
 			// Opening the archive
-			bit7z::BitArchiveReader archive{ lib, inArchive.string(), bit7z::BitFormat::Auto };
+			const bit7z::BitArchiveReader archive{ lib, inArchive.string(), bit7z::BitFormat::Auto };
 			// Verify archive integrity, throw BitException if invalid
 			archive.test();
 			// Finally: unpack to target folder
@@ -61,8 +65,8 @@ namespace Updater2::IO {
 
 	auto inspectArchive(const fs::path& archivePath) -> std::optional<Archive::Information> {
 		try {
-			bit7z::Bit7zLibrary lib(BIT7Z_STRING("7zip.dll"));
-			bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
+			const bit7z::Bit7zLibrary lib(BIT7Z_STRING(LIB_7Z_SHARED_LIBRARY_PATH));
+			const bit7z::BitArchiveReader arc{ lib, archivePath.string(), bit7z::BitFormat::Auto };
 			return Archive::Information{
 				.itemsCount = arc.itemsCount(),
 				.foldersCount = arc.foldersCount(),
@@ -105,7 +109,7 @@ namespace Updater2::IO {
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2)
 	{
 		// TODO: remove case sensitivity and irrelevant characters
-		return hash1.compare( hash2 ) == 0;
+		return hash1 == hash2;
 	}
 
 	bool isFolder(const fs::path& path_in)
@@ -167,7 +171,11 @@ namespace Updater2::IO {
 	}
 
 	bool copyFolderInto(const fs::path& folderPath, const fs::path& targetPath, std::error_code& ec, bool isClean) {
-		fs::copy(folderPath, targetPath, fs::copy_options::overwrite_existing, ec);
+		if (!isFolder(folderPath)) return false;
+		fs::create_directories(targetPath, ec);
+		if (ec) return false;
+		if (!isFolder(targetPath)) return false;
+		fs::copy(folderPath, targetPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
 		return verifyClean(isClean, ec);
 	}
 
@@ -176,7 +184,7 @@ namespace Updater2::IO {
 		return createFolder(folderPath, ec, isClean);
 	}
 	bool createFolder(const fs::path& folderPath, std::error_code& ec, bool isClean) noexcept {
-		return fs::create_directory(folderPath) && isClean;  // Try to create directory even if isClean is already false
+		return fs::create_directories(folderPath, ec) && isClean;  // Try to create directory even if isClean is already false
 	}
 
 	void removeFile(const fs::path& filename) {
