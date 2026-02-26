@@ -88,7 +88,7 @@ namespace Updater2::Downloader {
         using CurlHandle = std::unique_ptr<CURL, CurlDeleter>; // Resource Management in case of throw
     } // namespace
 
-    inline void fetch(std::ostream& target, const char* address = "https://www.example.com")
+    inline void fetch(std::ostream& target, const std::string& address = "https://www.example.com", long timeout_s = 0l)
     {
         ReceptionContainer container{ target };
         auto& context{ getContext() };
@@ -103,7 +103,7 @@ namespace Updater2::Downloader {
         CURL* hCurl{ curl.get() };
 
         /* specify URL to get */
-        verifySetting(curl_easy_setopt(hCurl, CURLOPT_URL, address));
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_URL, address.c_str()));
 
         /* send all data to this function  */
         verifySetting(curl_easy_setopt(hCurl, CURLOPT_WRITEFUNCTION, &writeCallback));
@@ -117,6 +117,9 @@ namespace Updater2::Downloader {
 
         /* Don't send error messages to target */
         verifySetting(curl_easy_setopt(hCurl, CURLOPT_FAILONERROR, 1L));
+
+        /* Have connection time out */
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_TIMEOUT, timeout_s));
 
         /* get it! */
         CURLcode result = curl_easy_perform(hCurl);

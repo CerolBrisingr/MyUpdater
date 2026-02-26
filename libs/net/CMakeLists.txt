@@ -1,4 +1,3 @@
-find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 
 add_library(Downloader INTERFACE)
@@ -19,11 +18,10 @@ target_include_directories(Downloader
     INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
-# TODO: Test/find out if OpenSSL::SSL is actively needed or implicitly available
 target_link_libraries(Downloader
     INTERFACE
         CURL::libcurl
-        OpenSSL::SSL)
+)
         
 if (BUILD_TESTING)
     add_subdirectory(tests)

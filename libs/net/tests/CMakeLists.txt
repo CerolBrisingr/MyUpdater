@@ -1,4 +1,5 @@
 include(GoogleTest)
+find_package(OpenSSL REQUIRED)
 
 add_executable(
         downloader_test
@@ -8,6 +9,8 @@ add_executable(
 target_link_libraries( downloader_test
         PRIVATE
             Downloader
+            OpenSSL::Crypto
+            OpenSSL::SSL
             GTest::gtest_main
 )
 
