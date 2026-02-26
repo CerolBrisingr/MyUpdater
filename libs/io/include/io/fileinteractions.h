@@ -2,19 +2,12 @@
 
 #include "io/ssldigest.h"
 
-// #define BIT7Z_USE_NATIVE_STRING avoided since vcpkg build comes without it
-// #define BIT7Z_AUTO_FORMAT moved to cmake target_compile_definitions
 #include <bit7z/bitarchivereader.hpp>
 
 #include <filesystem>
-#include <fstream>
 #include <string>
 #include <string_view>
-#include <cstddef>
-#include <memory>
 #include <system_error>
-#include <cstdint>
-#include <iterator>
 #include <vector>
 
 namespace Updater2::IO::Archive {

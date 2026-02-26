@@ -79,18 +79,17 @@ namespace Updater2::Downloader {
 
     inline void fetch(std::ostream& target, const char* address = "https://www.example.com")
     {
-        CURL* curl;
-
         ReceptionContainer container{ target };
         auto& context{ getContext() };
         if (context.result() != CURLE_OK)
             throw std::runtime_error("Failed to init CURL");
 
         /* init the curl session */
-        curl = curl_easy_init();
+        CURL* curl = curl_easy_init();
         if (!curl) {
             throw std::runtime_error("Failed to init CURL communication");
         }
+        // TODO: make sure easy_cleanup is performed if sth. throws from here on
 
         /* specify URL to get */
         verifySetting(curl_easy_setopt(curl, CURLOPT_URL, address));

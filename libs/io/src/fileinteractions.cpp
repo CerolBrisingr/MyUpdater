@@ -1,5 +1,10 @@
 #include "io/fileinteractions.h"
 
+#include <cstddef>
+#include <iterator>
+#include <fstream>
+#include <memory>
+
 #ifndef LIB_7Z_SHARED_LIBRARY_PATH
 #error "Missing library path macro"
 #endif
