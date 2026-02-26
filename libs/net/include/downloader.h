@@ -2,6 +2,7 @@
 #include <string>
 #include <format>
 #include <stdint.h>
+#include <memory>
 
 #include <curl/curl.h>
 
@@ -75,6 +76,16 @@ namespace Updater2::Downloader {
                 throw std::runtime_error("Failed to set curl option");
             }
         }
+
+        struct CurlDeleter {
+            void operator()(CURL* curl) const {
+                if (curl) {
+                    curl_easy_cleanup(curl);
+                }
+            }
+        };
+
+        using CurlHandle = std::unique_ptr<CURL, CurlDeleter>; // Resource Management in case of throw
     } // namespace
 
     inline void fetch(std::ostream& target, const char* address = "https://www.example.com")
@@ -85,33 +96,30 @@ namespace Updater2::Downloader {
             throw std::runtime_error("Failed to init CURL");
 
         /* init the curl session */
-        CURL* curl = curl_easy_init();
+        CurlHandle curl{ curl_easy_init() };
         if (!curl) {
             throw std::runtime_error("Failed to init CURL communication");
         }
-        // TODO: make sure easy_cleanup is performed if sth. throws from here on
+        CURL* hCurl{ curl.get() };
 
         /* specify URL to get */
-        verifySetting(curl_easy_setopt(curl, CURLOPT_URL, address));
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_URL, address));
 
         /* send all data to this function  */
-        verifySetting(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback));
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_WRITEFUNCTION, &writeCallback));
 
         /* we pass our 'chunk' struct to the callback function */
-        verifySetting(curl_easy_setopt(curl, CURLOPT_WRITEDATA, static_cast<void*>(&container)));
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_WRITEDATA, static_cast<void*>(&container)));
 
         /* some servers do not like requests that are made without a user-agent
             field, so we provide one */
-        verifySetting(curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0"));
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_USERAGENT, "libcurl-agent/1.0"));
 
         /* Don't send error messages to target */
-        verifySetting(curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L));
+        verifySetting(curl_easy_setopt(hCurl, CURLOPT_FAILONERROR, 1L));
 
         /* get it! */
-        CURLcode result = curl_easy_perform(curl);
-
-        /* cleanup curl stuff */
-        curl_easy_cleanup(curl);
+        CURLcode result = curl_easy_perform(hCurl);
 
         /* check for errors */
         if (!container.success) { // We know more in this case
