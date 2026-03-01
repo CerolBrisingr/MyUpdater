@@ -40,23 +40,36 @@ endif()
 if(NOT CERTS_VALID)
 	message(STATUS "Missing valid certificate files. Building new ones")
     # Clean up directory
-    FILE(REMOVE_RECURSE ${CERT_FOLDER})
-    FILE(MAKE_DIRECTORY ${CERT_FOLDER})
+    #FILE(REMOVE_RECURSE ${CERT_FOLDER})
+    #FILE(MAKE_DIRECTORY ${CERT_FOLDER})
 
-    # Root CA
-    execute_process(COMMAND ${OPENSSL_EXECUTABLE} genrsa -out ca.key 2048 WORKING_DIRECTORY ${CERT_FOLDER})
-    execute_process(COMMAND ${OPENSSL_EXECUTABLE} req -x509 -new -nodes -key ca.key -sha256 -days 10 -out ca.crt -subj "/CN=Test-Root-CA" WORKING_DIRECTORY ${CERT_FOLDER})
+    # Root CA, create key on the fly (-newkey line)
+    execute_process(
+        COMMAND ${OPENSSL_EXECUTABLE} req -x509 
+            -newkey rsa:2048 -noenc -keyout ca.key 
+            -out ca.crt -sha256 -days 3650
+            -subj "/CN=Test-Root-CA"
+        WORKING_DIRECTORY ${CERT_FOLDER})
 
-    # Server-Cert mit SAN
-    file(WRITE "${CERT_FOLDER}/server.ext" "subjectAltName = DNS:localhost, IP:127.0.0.1")
-    execute_process(COMMAND ${OPENSSL_EXECUTABLE} genrsa -out server.key 2048 WORKING_DIRECTORY ${CERT_FOLDER})
-    execute_process(COMMAND ${OPENSSL_EXECUTABLE} req -new -key server.key -out server.csr -subj "/CN=localhost" WORKING_DIRECTORY ${CERT_FOLDER})
-    execute_process(COMMAND ${OPENSSL_EXECUTABLE} x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 10 -sha256 -extfile server.ext WORKING_DIRECTORY ${CERT_FOLDER})
+    # Server-Cert with SAN
+    file(WRITE "${CERT_FOLDER}/server.ext" "subjectAltName = DNS:localhost, IP:127.0.0.1") 
+    execute_process(
+        COMMAND ${OPENSSL_EXECUTABLE} req -new
+            -newkey rsa:2048 -noenc -keyout server.key
+            -out server.csr
+            -subj "/CN=localhost"
+        WORKING_DIRECTORY ${CERT_FOLDER})
+    execute_process(
+        COMMAND ${OPENSSL_EXECUTABLE} x509 -req
+            -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial
+            -out server.crt -days 15 -sha256
+            -extfile server.ext
+        WORKING_DIRECTORY ${CERT_FOLDER})
 
     # Check for completeness
     foreach(FILE "ca.crt" "server.crt" "server.key")
         if(NOT EXISTS "${CERT_FOLDER}/${FILE}")
-            message(FATAL_ERROR "Kritischer Fehler: Zertifikatsdatei ${FILE} konnte nicht erstellt werden!")
+            message(FATAL_ERROR "Critical error: Certificate file ${FILE} could not be created!")
         endif()
     endforeach()
 endif()

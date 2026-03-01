@@ -33,13 +33,13 @@ target_compile_features(downloader_test
 
 target_compile_definitions(downloader_test
     PRIVATE
-        SSL_ASSET_CA_CERT
-        SSL_ASSET_SERVER_KEY
-        SSL_ASSET_SERVER_CERT
-        SSL_ASSET_SERVER_TIMEOUT_KEY
-        SSL_ASSET_SERVER_TIMEOUT_CERT
-        SSL_ASSET_SERVER_NO_CA_KEY
-        SSL_ASSET_SERVER_NO_CA_CERT
+        CA_CERT="${SSL_ASSET_CA_CERT}"
+        SERVER_KEY="${SSL_ASSET_SERVER_KEY}"
+        SERVER_CERT="${SSL_ASSET_SERVER_CERT}"
+        SERVER_TIMEOUT_KEY="${SSL_ASSET_SERVER_TIMEOUT_KEY}"
+        SERVER_TIMEOUT_CERT="${SSL_ASSET_SERVER_TIMEOUT_CERT}"
+        SERVER_NO_CA_KEY="${SSL_ASSET_SERVER_NO_CA_KEY}"
+        SERVER_NO_CA_CERT="${SSL_ASSET_SERVER_NO_CA_CERT}"
 )
 
 target_include_directories(

@@ -5,5 +5,5 @@ out/*
 TestResults/*
 Testing/*
 **/XMLGoogleTestResults.xml
-**/certs/*
+**/certs/*/*
 *.swp
