@@ -42,6 +42,7 @@ if(NOT CERTS_VALID)
     # Clean up directory
     #FILE(REMOVE_RECURSE ${CERT_FOLDER})
     #FILE(MAKE_DIRECTORY ${CERT_FOLDER})
+    # TODO: split in individual directories, apply config (-config, -extensions)
 
     # Root CA, create key on the fly (-newkey line)
     execute_process(
