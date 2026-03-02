@@ -1,6 +1,6 @@
 {
   "dependencies": [
-    "openssl",
+    { "name": "openssl", "features": [ "tools" ]},
     "gtest",
     "7zip",
     "curl"

@@ -31,6 +31,8 @@ target_compile_features(downloader_test
             cxx_std_20
 )
 
+add_dependencies(downloader_test ssl_assets)
+
 target_compile_definitions(downloader_test
     PRIVATE
         CA_CERT="${SSL_ASSET_CA_CERT}"
