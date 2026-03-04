@@ -1,5 +1,6 @@
 #include <io/fileinteractions.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 namespace Updater2::IO {
 
