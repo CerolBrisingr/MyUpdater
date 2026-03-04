@@ -1,26 +1,17 @@
 include(GoogleTest)
 find_package(OpenSSL REQUIRED)
-
-block(PROPAGATE
-        SSL_ASSET_CA_CERT
-        SSL_ASSET_SERVER_KEY
-        SSL_ASSET_SERVER_CERT
-        SSL_ASSET_SERVER_TIMEOUT_KEY
-        SSL_ASSET_SERVER_TIMEOUT_CERT
-        SSL_ASSET_SERVER_NO_CA_KEY
-        SSL_ASSET_SERVER_NO_CA_CERT
-        )
-    include(buildCertificates.cmake)
-endblock()
+find_program(OPENSSL_EXECUTABLE openssl REQUIRED)
 
 add_executable(
         downloader_test
+        certificate_handler.cpp
         downloader_test.cpp
 )
 
 target_link_libraries( downloader_test
         PRIVATE
             Downloader
+            Fileinteractions
             OpenSSL::Crypto
             OpenSSL::SSL
             GTest::gtest_main
@@ -31,23 +22,16 @@ target_compile_features(downloader_test
             cxx_std_20
 )
 
-add_dependencies(downloader_test ssl_assets)
-
 target_compile_definitions(downloader_test
     PRIVATE
-        CA_CERT="${SSL_ASSET_CA_CERT}"
-        SERVER_KEY="${SSL_ASSET_SERVER_KEY}"
-        SERVER_CERT="${SSL_ASSET_SERVER_CERT}"
-        SERVER_TIMEOUT_KEY="${SSL_ASSET_SERVER_TIMEOUT_KEY}"
-        SERVER_TIMEOUT_CERT="${SSL_ASSET_SERVER_TIMEOUT_CERT}"
-        SERVER_NO_CA_KEY="${SSL_ASSET_SERVER_NO_CA_KEY}"
-        SERVER_NO_CA_CERT="${SSL_ASSET_SERVER_NO_CA_CERT}"
+        OPEN_SSL="${OPENSSL_EXECUTABLE}"
 )
 
 target_include_directories(
         downloader_test
             PUBLIC
                 "${CMAKE_CURRENT_LIST_DIR}/external/"
+                "${CMAKE_CURRENT_LIST_DIR}/include/"
 )
 
 gtest_discover_tests(downloader_test)

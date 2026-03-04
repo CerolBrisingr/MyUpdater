@@ -1,12 +1,6 @@
 find_package(CURL REQUIRED)
 
 add_library(Downloader INTERFACE)
-#[[add_executable(Downloader)
-target_sources(Downloader
-    PUBLIC
-        src/provisional_runner.cpp)
-#]]
-# TODO: Remove associated files before removing this comment
 
 # TODO: Apply to all targets intended to be "modular"
 target_compile_features(Downloader

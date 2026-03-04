@@ -5,6 +5,11 @@ add_executable(
   ssldigest/ssldigest_test.cpp
 )
 
+target_compile_features(ssldigest_test
+    INTERFACE
+        cxx_std_20
+)
+
 target_link_libraries( ssldigest_test
 	PRIVATE
 		Fileinteractions
@@ -17,6 +22,11 @@ gtest_discover_tests(ssldigest_test)
 add_executable(
   fileinteraction_test
   fileinteraction/fileinteraction_test.cpp
+)
+
+target_compile_features(fileinteraction_test
+    INTERFACE
+        cxx_std_20
 )
 
 target_link_libraries( fileinteraction_test
@@ -41,6 +51,11 @@ endif()
 
 add_executable( commandline_printer
     fileinteraction/commandline_printer.cpp
+)
+
+target_compile_features(commandline_printer
+    INTERFACE
+        cxx_std_20
 )
 
 add_dependencies(fileinteraction_test commandline_printer)

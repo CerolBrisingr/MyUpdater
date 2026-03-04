@@ -23,7 +23,7 @@ namespace Updater2::IO::Archive {
 namespace Updater2::IO {
 	using stringList = std::vector<std::string>;
 
-    bool createProcess(const std::filesystem::path& processPath, const stringList& commandLineArgs);
+    bool createProcess(const std::filesystem::path& processPath, const stringList& commandLineArgs, bool waiting = false);
 
 	bool cleanUpRemainingTempFiles();
 

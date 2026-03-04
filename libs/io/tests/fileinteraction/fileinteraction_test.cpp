@@ -181,9 +181,19 @@ namespace Executable {
 	TEST_P(ExecutableStarterTest, commandline) {
 		ASSERT_TRUE(myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE)) << "Previous output still exists and could not be removed!";
 		const auto& [arguments, verification] = GetParam();
-		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, arguments);
+		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, arguments, false);
 		ASSERT_TRUE(result) << "Failed to run target executable";
 		ASSERT_TRUE(waitForFile(COMMANDLINE_PRINTER_FILE)); // We're testing a detached start
+		std::string lineString{ myfs::readFirstLineInFile(COMMANDLINE_PRINTER_FILE) };
+		EXPECT_EQ(lineString, std::format("{} {}", COMMANDLINE_PRINTER, verification));
+		myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE);
+	}
+
+	TEST_P(ExecutableStarterTest, commandlineWaiting) {
+		ASSERT_TRUE(myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE)) << "Previous output still exists and could not be removed!";
+		const auto& [arguments, verification] = GetParam();
+		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, arguments, true);
+		ASSERT_TRUE(result) << "Failed to run target executable";
 		std::string lineString{ myfs::readFirstLineInFile(COMMANDLINE_PRINTER_FILE) };
 		EXPECT_EQ(lineString, std::format("{} {}", COMMANDLINE_PRINTER, verification));
 		myfs::removeFileNoThrow(COMMANDLINE_PRINTER_FILE);
