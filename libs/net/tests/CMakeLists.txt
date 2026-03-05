@@ -22,9 +22,14 @@ target_compile_features(downloader_test
             cxx_std_20
 )
 
+set(CA_CONFIG_PATH "${CMAKE_CURRENT_LIST_DIR}/certs/ca.conf")
+set(SERVER_CONFIG_PATH "${CMAKE_CURRENT_LIST_DIR}/certs/server.conf")
+
 target_compile_definitions(downloader_test
     PRIVATE
         OPEN_SSL="${OPENSSL_EXECUTABLE}"
+        CA_CONFIG="${CA_CONFIG_PATH}"
+        SERVER_CONFIG="${SERVER_CONFIG_PATH}"
 )
 
 target_include_directories(
