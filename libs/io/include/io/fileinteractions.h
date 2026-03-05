@@ -32,6 +32,8 @@ namespace Updater2::IO {
 
 	std::string calculateMd5HashFromFile(const std::filesystem::path& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);
+
+    bool file1IsOlderThan2(const std::filesystem::path& file1, const std::filesystem::path& file2);
     
 	bool isFolder(const std::filesystem::path& path_in);
 	bool isFile(const std::filesystem::path& path_in);

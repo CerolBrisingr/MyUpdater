@@ -117,6 +117,11 @@ namespace Updater2::IO {
 		return hash1 == hash2;
 	}
 
+	bool file1IsOlderThan2(const fs::path& file1, const fs::path& file2)
+	{
+		return fs::last_write_time(file1) < fs::last_write_time(file2);
+	}
+
 	bool isFolder(const fs::path& path_in)
 	{
 		return fs::is_directory(path_in);
@@ -189,7 +194,8 @@ namespace Updater2::IO {
 		return createFolder(folderPath, ec, isClean);
 	}
 	bool createFolder(const fs::path& folderPath, std::error_code& ec, bool isClean) noexcept {
-		return fs::create_directories(folderPath, ec) && isClean;  // Try to create directory even if isClean is already false
+		fs::create_directories(folderPath, ec);
+		return verifyClean(isClean, ec);
 	}
 
 	void removeFile(const fs::path& filename) {
