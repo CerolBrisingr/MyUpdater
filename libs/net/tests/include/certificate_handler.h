@@ -20,8 +20,8 @@ namespace Updater2::Certificates {
 		CertPair operator=(CertPair&) = delete;
 		CertPair operator=(CertPair&&) = delete;
 
-		std::string key() const { return m_keyPath.string(); };
-		std::string cert() const { return m_certPath.string(); };
+		std::string key() const { return m_keyPath.generic_string(); };
+		std::string cert() const { return m_certPath.generic_string(); };
 		const fs::path& keyPath() const { return m_keyPath; };
 		const fs::path& certPath() const { return m_certPath; };
 	private:

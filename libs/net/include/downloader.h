@@ -8,6 +8,30 @@
 
 namespace Updater2::Downloader {
 
+#ifdef UNIT_TESTING
+    class CustomCA {
+    private:
+        inline static std::string caPath{};
+
+    public:
+        static void setPath(const std::string& customPath) {
+            CustomCA::caPath = customPath;
+        }
+
+        static const char* path() {
+            return CustomCA::caPath.c_str();
+        }
+
+        static bool isEmpty() {
+            return CustomCA::caPath.empty();
+        }
+
+        static void reset() {
+            CustomCA::caPath = "";
+        }
+    };
+#endif
+
     namespace {
         struct ReceptionContainer {
             std::ostream& target;
@@ -115,6 +139,24 @@ namespace Updater2::Downloader {
             field, so we provide one */
         verifySetting(curl_easy_setopt(hCurl, CURLOPT_USERAGENT, "libcurl-agent/1.0"));
 
+#ifdef UNIT_TESTING
+        if (!CustomCA::isEmpty()) {
+            /* Allow use of CA without revoke list, as we cannot provide one */
+            verifySetting(curl_easy_setopt(hCurl, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NO_REVOKE));
+            /* Import own CA */
+            verifySetting(curl_easy_setopt(hCurl, CURLOPT_CAINFO, CustomCA::path()));
+        }
+#endif
+
+#ifdef UPDATER2_CURL_VERBOSE
+        /* Let's see if we like more chatter */
+        curl_easy_setopt(hCurl, CURLOPT_VERBOSE, 1L);
+#endif
+
+        // Extended error messages
+        char errbuf[CURL_ERROR_SIZE]{};
+        curl_easy_setopt(hCurl, CURLOPT_ERRORBUFFER, errbuf);
+
         /* Don't send error messages to target */
         verifySetting(curl_easy_setopt(hCurl, CURLOPT_FAILONERROR, 1L));
 
@@ -128,8 +170,9 @@ namespace Updater2::Downloader {
         if (!container.success) { // We know more in this case
             throw std::runtime_error(std::format("Write callback encountered an error: {}", container.error));
         }
-        if (result != CURLE_OK) { // This error should be curl-specific 
-            throw std::runtime_error(std::format("curl_easy_perform() failed: {}", curl_easy_strerror(result)));
+        if (result != CURLE_OK) { // This error should be curl-specific, use extended info if available
+            std::string detail = (errbuf[0] != '\0') ? errbuf : curl_easy_strerror(result);
+            throw std::runtime_error(std::format("curl_easy_perform() failed: {}", detail));
         }
     }
 

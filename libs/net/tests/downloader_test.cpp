@@ -12,6 +12,7 @@
 #include <future>
 #include <format>
 #include <filesystem>
+#include <memory>
 
 using namespace Updater2;
 using namespace std::literals::chrono_literals;
@@ -27,84 +28,84 @@ TEST(httpsdownloader, certificates) {
     ASSERT_NO_THROW(getCertificateHandler());
 }
 
+std::string setUpServer(std::unique_ptr<httplib::Server>& srv) {
+    srv.reset(new httplib::Server());
+    return "http";
+}
+
+std::string setUpServer(std::unique_ptr<httplib::SSLServer>& srv) {
+    auto& certs = getCertificateHandler();
+    Downloader::CustomCA::setPath(certs.ca().cert());
+    std::string key = certs.server().key();
+    std::string cert = certs.server().cert();
+    srv.reset(new httplib::SSLServer(cert.c_str(), key.c_str()));
+    return "https";
+}
+
+template <typename ServerType>
 class HttpDownloaderTest : public ::testing::Test {
 protected:
-    httplib::Server svr;
+    std::unique_ptr<ServerType> svr;
     int port = -1;
     std::string base_url;
     std::thread server_thread;
 
     void SetUp() override {
-        port = svr.bind_to_any_port("127.0.0.1");
+        std::string prefix = setUpServer(svr);
+        port = svr->bind_to_any_port("127.0.0.1");
+        ERR_print_errors_fp(stderr);
         ASSERT_NE(port, -1) << "Failed to bind server to port!";
-        base_url = std::format("http://127.0.0.1:{}", port);
+        base_url = std::format("{}://127.0.0.1:{}", prefix, port);
     }
 
     void start_server() {
         server_thread = std::thread([&svr = this->svr]() {
-            svr.listen_after_bind();
+            svr->listen_after_bind();
             });
 
         const auto timeout = 1s;
         const auto interval = 10ms;
         const auto start = std::chrono::steady_clock::now();
 
-        while (!svr.is_running() && (std::chrono::steady_clock::now() - start < timeout)) {
+        while (!svr->is_running() && (std::chrono::steady_clock::now() - start < timeout)) {
             std::this_thread::sleep_for(interval);
         }
-        ASSERT_TRUE(svr.is_running()) << "Failed to start server within "
+        ASSERT_TRUE(svr->is_running()) << "Failed to start server within "
             << std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count()
             << ", session timed out!";
     }
 
     void TearDown() override {
-        svr.stop();
+        svr->stop();
         if (server_thread.joinable()) {
             server_thread.join();
         }
+        Downloader::CustomCA::reset();
     }
 
 };
 
+using MyServerTypes = ::testing::Types<httplib::Server, httplib::SSLServer>;
+TYPED_TEST_SUITE(HttpDownloaderTest, MyServerTypes);
 
-TEST_F(HttpDownloaderTest, FetchHelloWorld) {
-    svr.Get("/hi", [](const httplib::Request&, httplib::Response& res) {
+
+TYPED_TEST(HttpDownloaderTest, FetchHelloWorld) {
+    this->svr->Get("/hi", [](const httplib::Request&, httplib::Response& res) {
         res.set_content("Hello World!", "text/plain");
         });
 
-    start_server();
+    this->start_server();
 
-    std::string url = std::format("{}/hi", base_url);
+    std::string url = std::format("{}/hi", this->base_url);
     std::stringstream target{};
     Downloader::fetch(target, url.c_str(), 5l);
 
     EXPECT_EQ("Hello World!", target.str());
 }
 
-/* FUTURE SSL Integration:
-template <typename ServerType>
-class DownloaderTestBase : public ::testing::Test {
-protected:
-    ServerType svr;
-
-    // Don't forget configuration for SSL
-};
-
-using ServerTypes = ::testing::Types<httplib::Server, httplib::SSLServer>;
-TYPED_TEST_SUITE(DownloaderTest, ServerTypes);
-
-TYPED_TEST(DownloaderTest, FetchBasicContent) {
-    // Within TYPED_TEST we access members via 'this->'
-    this->svr.Get("/hi", [](const httplib::Request&, httplib::Response& res) {
-        res.set_content("Hello World!", "text/plain");
-    });
-
-    this->start_server();
-
-    std::stringstream target;
-    // Downloader::fetch should be fine with both, HTTP and HTTPS
-    Downloader::fetch(target, (this->base_url + "/hi").c_str(), 5l);
-
-    EXPECT_EQ("Hello World!", target.str());
-}
+/* TODO:
+    * Self-signed certificate (No CA, no success expected)
+    * Outdated certificate (no success either)
+    
+    * Incomplete download
 */

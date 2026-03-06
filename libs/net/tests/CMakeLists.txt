@@ -30,6 +30,7 @@ target_compile_definitions(downloader_test
         OPEN_SSL="${OPENSSL_EXECUTABLE}"
         CA_CONFIG="${CA_CONFIG_PATH}"
         SERVER_CONFIG="${SERVER_CONFIG_PATH}"
+        UNIT_TESTING
 )
 
 target_include_directories(
