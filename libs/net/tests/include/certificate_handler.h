@@ -41,10 +41,6 @@ namespace Updater2::Certificates {
 			bool hasServer{ false };
 		};
 	public:
-		struct HandlerState {
-			bool isValid{ true };
-			std::string error_msg {};
-		};
 		Handler(const fs::path& executable, const fs::path& caConfig, const fs::path& serverConfig);
 		Handler(Handler&) = delete;
 		Handler(Handler&&) = delete;
@@ -53,7 +49,6 @@ namespace Updater2::Certificates {
 
 		const CertPair& ca() const { return m_ca; };
 		const CertPair& server() const { return m_server; };
-		const Handler::HandlerState& status() const { return m_state; };
 	private:
 		const fs::path m_opensslExecutable{};
 		const fs::path m_caConfig{};
@@ -62,16 +57,14 @@ namespace Updater2::Certificates {
 		const fs::path m_currentPath{};
 		const CertPair m_ca;
 		const CertPair m_server;
-		HandlerState m_state{};
 
-		bool buildCA();
-		bool createServerCert();
+		void buildCA() const;
+		void createServerCert() const;
 
-		bool setError(std::string_view error_msg);
-		bool verifyEnvironment();
+		void verifyEnvironment() const;
 		Handler::CertChecklist queryExistingCertificates() const;
-		bool supplyCertificates(const Handler::CertChecklist& inventory);
-		void verifyNewCerts(const Handler::CertChecklist& inventory);
+		void supplyCertificates(const Handler::CertChecklist& inventory) const;
+		void verifyNewCerts(const Handler::CertChecklist& inventory) const;
 		bool verifyCert(const CertPair& cert, const fs::path& configPath) const;
 		bool verifyCert(const CertPair& cert) const;
 	};
