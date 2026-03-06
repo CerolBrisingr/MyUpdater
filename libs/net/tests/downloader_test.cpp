@@ -17,10 +17,10 @@ using namespace Updater2;
 using namespace std::literals::chrono_literals;
 
 namespace {
-    static std::filesystem::path g_SSL_EXECUTABLE{ OPEN_SSL };
-    static std::filesystem::path g_CA_CONFIG{ CA_CONFIG };
-    static std::filesystem::path g_SERVER_CONFIG{ SERVER_CONFIG };
-    static Certificates::Handler certificateHandler(g_SSL_EXECUTABLE, g_CA_CONFIG, g_SERVER_CONFIG);
+    static const std::filesystem::path g_SSL_EXECUTABLE{ OPEN_SSL };
+    static const std::filesystem::path g_CA_CONFIG{ CA_CONFIG };
+    static const std::filesystem::path g_SERVER_CONFIG{ SERVER_CONFIG };
+    static const Certificates::Handler certificateHandler(g_SSL_EXECUTABLE, g_CA_CONFIG, g_SERVER_CONFIG);
 }
 
 class HttpDownloaderTest : public ::testing::Test {
