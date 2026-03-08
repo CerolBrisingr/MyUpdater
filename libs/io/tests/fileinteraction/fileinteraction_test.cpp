@@ -168,7 +168,8 @@ namespace Executable {
 #ifdef _WIN32
 		TestParam{ {"\"quoted argument\""}, "quoted argument" },
 #endif
-		TestParam{ {"multiple", "arguments"}, "multiple arguments"}
+		TestParam{ {"multiple", "arguments"}, "multiple arguments"},
+		TestParam{ {"x509", "-checkend", "172800", "-noout", "-in", "ca.crt"}, "x509 -checkend 172800 -noout -in ca.crt"}
 	};
 
 	INSTANTIATE_TEST_SUITE_P(
@@ -192,9 +193,14 @@ namespace Executable {
 	TEST_P(ExecutableStarterTest, commandlineWaiting) {
 		const auto& [arguments, verification] = GetParam();
 		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, arguments, true);
-		ASSERT_TRUE(result) << "Failed to run target executable";
+		ASSERT_TRUE(result) << "Target executable returned error";
 		std::string lineString{ myfs::readFirstLineInFile(COMMANDLINE_PRINTER_FILE) };
 		EXPECT_EQ(lineString, std::format("{} {}", COMMANDLINE_PRINTER, verification));
+	}
+
+	TEST_F(ExecutableStarterTest, commandlineWaitingForError) {
+		bool result = Updater2::IO::createProcess(COMMANDLINE_PRINTER, {"-dofail"}, true);
+		ASSERT_FALSE(result) << "Target executable should return error";
 	}
 
 } // namespace Executable

@@ -11,8 +11,10 @@ namespace Updater2::Certificates {
 		, m_caConfig{ caConfig }
 		, m_serverConfig{ serverConfig }
 		, m_currentPath{ fs::current_path(m_ec)}
-		, m_ca{ m_currentPath / "certs", "ca" , m_ec}
-		, m_server{ m_currentPath / "certs", "server", m_ec}
+		, m_ca{ m_currentPath / "certs", "ca" , m_ec }
+		, m_server{ m_currentPath / "certs", "server", m_ec }
+		, m_timeoutServer{ m_currentPath / "certs", "timeout_server", m_ec }
+		, m_selfCertServer{ m_currentPath / "certs", "self_cert_server", m_ec }
 	{
 		verifyEnvironment();
 		auto inventory = queryExistingCertificates();
@@ -42,15 +44,18 @@ namespace Updater2::Certificates {
 		CertChecklist inventory{};
 		if (verifyCert(m_ca, m_caConfig)) {
 			inventory.hasCA = true;
+			// Now test dependant certificates
+			if (verifyCert(m_server, m_serverConfig)) {
+				inventory.hasServer = true;
+			}
+			if (verifyCert(m_timeoutServer, m_serverConfig, CertTypes::TIMEOUT)) {
+				inventory.hasTimeoutServer = true;
+			}
 		}
-		else {
-			// If we need a new CA certificate also the server 
-			// certificate needs to be renewed
-			return inventory;
+		if (verifyCert(m_selfCertServer, m_serverConfig)) {
+			inventory.hasSelfCertServer = true;
 		}
-		if (verifyCert(m_server, m_serverConfig)) {
-			inventory.hasServer = true;
-		}
+		// TODO: Self-Signed
 		return inventory;
 	}
 
@@ -59,8 +64,14 @@ namespace Updater2::Certificates {
 			buildCA();
 		}
 		if (!inventory.hasServer) {
-			createServerCert();
+			const fs::path serial{ m_currentPath / "certs/server.csr" };
+			createServerCert(m_server, serial, "15");
 		}
+		if (!inventory.hasTimeoutServer) {
+			const fs::path serial{ m_currentPath / "certs/timeout_server.csr" };
+			createServerCert(m_timeoutServer, serial, "0");
+		}
+		// TODO: Self-Signed
 	}
 
 	void Handler::verifyNewCerts(const Handler::CertChecklist& inventory) const {
@@ -70,6 +81,10 @@ namespace Updater2::Certificates {
 		if (!inventory.hasServer && !verifyCert(m_server, m_serverConfig)) {
 			throw std::runtime_error("Valid server certificate was not available and could not be created");
 		}
+		if (!inventory.hasTimeoutServer && !verifyCert(m_timeoutServer, m_serverConfig, CertTypes::TIMEOUT)) {
+			throw std::runtime_error("Valid timed-out server certificate was not available and could not be created");
+		}
+		// TODO: Self-Signed
 	}
 
 	void Handler::buildCA() const {
@@ -84,47 +99,70 @@ namespace Updater2::Certificates {
 		}
 	}
 
-	void Handler::createServerCert() const {
-		const fs::path serial{ m_currentPath / "certs/server.csr" };
-		const myfs::stringList keyArguments {
-			"req", "-new", "-out", serial.string(),
-			"-newkey", "rsa:2048", "-noenc", "-keyout", m_server.key(),
+	void Handler::createServerCert(const CertPair& server, const fs::path& serialPath, const std::string& days) const {
+		createServerKey(server, serialPath, days);
+		if (days[0] == '-') {  // Negative number
+			throw std::runtime_error("Implement this");
+		}
+		else {
+			certifyServer(server, serialPath, days);
+		}
+	}
+
+	void Handler::createServerKey(const CertPair& server, const fs::path& serialPath, const std::string& days) const {
+		const myfs::stringList keyArguments{
+			"req", "-new", "-out", serialPath.string(),
+			"-newkey", "rsa:2048", "-noenc", "-keyout", server.key(),
 			"-config", m_serverConfig.string()
 		};
 		if (!myfs::createProcess(m_opensslExecutable, keyArguments, true)) {
-			throw std::runtime_error("Server key creation returned error");
+			throw std::runtime_error(std::format("Server key creation ({}days) returned error", days));
 		}
+	}
 
-		const myfs::stringList certArguments {
-			"x509", "-req", "-in", serial.string(),
+	void Handler::certifyServer(const CertPair& server, const fs::path& serialPath, const std::string& days) const {
+		const myfs::stringList certArguments{
+			"x509", "-req", "-in", serialPath.string(),
 			"-CA", m_ca.cert(), "-CAkey", m_ca.key(), "-CAcreateserial",
-			"-out", m_server.cert(), "-days", "15", "-sha256",
+			"-out", server.cert(), "-days", days, "-sha256",
 			"-copy_extensions", "copy"
 		};
 		if (!myfs::createProcess(m_opensslExecutable, certArguments, true)) {
-			throw std::runtime_error("Server certification returned error");
+			throw std::runtime_error(std::format("Server certification ({}days) returned error", days));
 		}
-
 	}
 
-	bool Handler::verifyCert(const CertPair& cert, const fs::path& configPath) const {
+	bool Handler::verifyCert(const CertPair& cert, const fs::path& configPath, CertTypes mode) const {
 		if (!myfs::isFile(cert.certPath())) {
 			return false;	// Certificate missing, no need to check
 		}
 		if (!myfs::file1IsOlderThan2(configPath, cert.certPath())) {
 			return false;	// Config file changed since certificate was created
 		}
-		return verifyCert(cert);
+		return verifyCert(cert, mode);
 	}
 
-	bool Handler::verifyCert(const CertPair& cert) const {
+	bool Handler::verifyCert(const CertPair& cert, const CertTypes mode) const {
 		if (!myfs::isFile(cert.certPath()) || !myfs::isFile(cert.keyPath())) {
 			return false;	// Missing file(s), no need to test them
 		}
-		// Test certificate for remaining runtime. Less than 2 days (172800s) is too little.
-		const myfs::stringList runtimeArguments{ "x509", "-checkend", "172800", "-noout", "-in", cert.cert() };
-		if (!myfs::createProcess(m_opensslExecutable, runtimeArguments, true)) {
-			return false;	// Certificate no longer valid (or at least 2 days from now)
+
+		const CertPair* reference = &m_ca;
+		if (mode == CertTypes::SELFCERT) {
+			reference = &cert;
+		}
+		// Test for timeout of certificate
+		if (mode == CertTypes::TIMEOUT) {
+			// Timeout needs to be in effect NOW
+			if (isStillValid(*reference, cert, 0)) {
+				return false;
+			}
+		}
+		else {
+			// We need at least enough time to do our tests (default is 2d)
+			if (!isStillValid(*reference, cert)) {
+				return false;
+			}
 		}
 
 		// Select file for text output
@@ -151,6 +189,22 @@ namespace Updater2::Certificates {
 		std::string certModulus{ myfs::readTextFile(tempOutput) };
 
 		myfs::removeFile(tempOutput); // Clean up temp file
-		return keyModulus == certModulus; // Return true if key and certificate match
+		return keyModulus == certModulus; // Return true if key and certificate modulus match
 	}
+
+	bool Handler::isStillValid(const CertPair& ca, const CertPair& cert, int leewayDays) const {
+		// Test certificate for validity. -checkend behavior is platform dependant in cases where expiry is in the past
+		const myfs::stringList runtimeArguments{ "verify", "-CAfile", ca.cert(), cert.cert()};
+		if (!myfs::createProcess(m_opensslExecutable, runtimeArguments, true)) {
+			return false;
+		}
+		// Default: Less than 2 days (2x 62400s) remaining is too little.
+		if (leewayDays > 0) {
+			const myfs::stringList checkendArgs{ "x509", "-checkend", std::to_string(leewayDays * 62400), "-noout", "-in", cert.cert()};
+			const bool hasEnoughBuffer = myfs::createProcess(m_opensslExecutable, checkendArgs, true);
+			return hasEnoughBuffer;
+		}
+		return true;
+	}
+
 } // namespace Updater2::Certificates

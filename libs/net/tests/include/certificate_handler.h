@@ -36,9 +36,12 @@ namespace Updater2::Certificates {
 	};
 
 	class Handler {
+		enum class CertTypes { DEFAULT, TIMEOUT, SELFCERT };
 		struct CertChecklist {
 			bool hasCA{ false };
 			bool hasServer{ false };
+			bool hasTimeoutServer{ false };
+			bool hasSelfCertServer{ false };
 		};
 	public:
 		Handler(const fs::path& executable, const fs::path& caConfig, const fs::path& serverConfig);
@@ -49,23 +52,31 @@ namespace Updater2::Certificates {
 
 		const CertPair& ca() const { return m_ca; };
 		const CertPair& server() const { return m_server; };
+		const CertPair& timeoutServer() const { return m_timeoutServer; };
+		const CertPair& selfCertServer() const { return m_selfCertServer; };
 	private:
 		const fs::path m_opensslExecutable{};
 		const fs::path m_caConfig{};
 		const fs::path m_serverConfig{};
 		std::error_code m_ec{};
 		const fs::path m_currentPath{};
+
 		const CertPair m_ca;
 		const CertPair m_server;
+		const CertPair m_timeoutServer;
+		const CertPair m_selfCertServer;
 
 		void buildCA() const;
-		void createServerCert() const;
+		void createServerCert(const CertPair& server, const fs::path& serialPath, const std::string& days) const;
+		void createServerKey(const CertPair& server, const fs::path& serialPath, const std::string& days) const;
+		void certifyServer(const CertPair& server, const fs::path& serialPath, const std::string& days) const;
 
 		void verifyEnvironment() const;
 		Handler::CertChecklist queryExistingCertificates() const;
 		void supplyCertificates(const Handler::CertChecklist& inventory) const;
 		void verifyNewCerts(const Handler::CertChecklist& inventory) const;
-		bool verifyCert(const CertPair& cert, const fs::path& configPath) const;
-		bool verifyCert(const CertPair& cert) const;
+		bool verifyCert(const CertPair& cert, const fs::path& configPath, const CertTypes mode = CertTypes::DEFAULT) const;
+		bool verifyCert(const CertPair& cert, CertTypes mode = CertTypes::DEFAULT) const;
+		bool isStillValid(const CertPair& ca, const CertPair& cert, int leewayDays = 2) const;
 	};
 } // namespace Updater2::Certificates
