@@ -20,15 +20,3 @@ target_link_libraries(Downloader
 if (BUILD_TESTING)
     add_subdirectory(tests)
 endif()
-
-if(CURL_HTTPS_FOUND)
-  message("CURL supports HTTPS")
-else()
-  message("CURL is missing HTTPS access")
-endif()
-
-if(CURL_SSL_FOUND)
-  message("CURL supports SSL")
-else()
-  message("CURL is missing SSL")
-endif()
