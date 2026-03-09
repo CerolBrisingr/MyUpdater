@@ -13,6 +13,7 @@
 #include <format>
 #include <filesystem>
 #include <memory>
+#include <algorithm>
 
 using namespace Updater2;
 using namespace std::literals::chrono_literals;
@@ -22,6 +23,7 @@ namespace {
         static const Certificates::Handler certificateHandler(OPEN_SSL, CA_CONFIG, SERVER_CONFIG);
         return certificateHandler;
     }
+    constexpr std::size_t DATA_CHUNK_SIZE = 4;
 }
 
 TEST(httpsdownloader, certificates) {
@@ -49,6 +51,22 @@ protected:
     int port = -1;
     std::string base_url;
     std::thread server_thread;
+
+    static void SetupStreamRoute(std::unique_ptr<ServerType>& svr, bool succeed = true) {
+        svr->Get("/stream", [succeed](const httplib::Request& req, httplib::Response& res) {
+            static const std::string data{ "abcdefg" };
+
+            res.set_content_provider(
+                data.size(), // Content length
+                "text/plain", // Content type
+                [succeed](std::size_t offset, std::size_t length, httplib::DataSink& sink) {
+                    const auto& d = data;
+                    sink.write(&d[offset], (std::min)(length, DATA_CHUNK_SIZE));
+                    return succeed; // return 'false' if you want to cancel the process.
+                },
+                [](bool success) {});
+            });
+    }
 
     void SetUp() override {
         std::string prefix = setUpServer(svr);
@@ -101,6 +119,34 @@ TYPED_TEST(HttpDownloaderTest, FetchHelloWorld) {
     Downloader::fetch(target, url.c_str(), 5l);
 
     EXPECT_EQ("Hello World!", target.str());
+}
+
+TYPED_TEST(HttpDownloaderTest, FetchStream) {
+
+    HttpDownloaderTest<TypeParam>::SetupStreamRoute(this->svr);
+    this->start_server();
+
+    std::string url = std::format("{}/stream", this->base_url);
+    std::stringstream target{};
+    Downloader::fetch(target, url.c_str(), 5l);
+
+    EXPECT_EQ("abcdefg", target.str());
+}
+
+TYPED_TEST(HttpDownloaderTest, StreamFail) {
+
+    HttpDownloaderTest<TypeParam>::SetupStreamRoute(this->svr, false);
+    this->start_server();
+
+    std::string url = std::format("{}/stream", this->base_url);
+    std::stringstream target{};
+
+    // We expect an error, but go on
+    EXPECT_ANY_THROW({
+        Downloader::fetch(target, url.c_str(), 5l);
+    });
+
+    EXPECT_EQ("abcd", target.str());
 }
 
 /* TODO:
