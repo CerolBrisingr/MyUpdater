@@ -42,6 +42,15 @@ std::string setUpServer(std::unique_ptr<httplib::SSLServer>& srv) {
     std::string cert = certs.server().cert();
     srv.reset(new httplib::SSLServer(cert.c_str(), key.c_str()));
     return "https";
+
+}
+std::string setUpInvalidServer(std::unique_ptr<httplib::SSLServer>& srv) {
+    auto& certs = getCertificateHandler();
+    Downloader::CustomCA::setPath(certs.ca().cert());
+    std::string key = certs.timeoutServer().key();
+    std::string cert = certs.timeoutServer().cert();
+    srv.reset(new httplib::SSLServer(cert.c_str(), key.c_str()));
+    return "https";
 }
 
 template <typename ServerType>
@@ -68,15 +77,14 @@ protected:
             });
     }
 
-    void SetUp() override {
-        std::string prefix = setUpServer(svr);
+    void setConnection(std::string_view prefix) {
         port = svr->bind_to_any_port("127.0.0.1");
         ERR_print_errors_fp(stderr);
         ASSERT_NE(port, -1) << "Failed to bind server to port!";
         base_url = std::format("{}://127.0.0.1:{}", prefix, port);
     }
 
-    void start_server() {
+    void startServer() {
         server_thread = std::thread([&svr = this->svr]() {
             svr->listen_after_bind();
             });
@@ -94,7 +102,7 @@ protected:
     }
 
     void TearDown() override {
-        svr->stop();
+        if (svr) { svr->stop(); }
         if (server_thread.joinable()) {
             server_thread.join();
         }
@@ -108,11 +116,15 @@ TYPED_TEST_SUITE(HttpDownloaderTest, MyServerTypes);
 
 
 TYPED_TEST(HttpDownloaderTest, FetchHelloWorld) {
+
+    std::string prefix = setUpServer(this->svr);
+    this->setConnection(prefix);
+
     this->svr->Get("/hi", [](const httplib::Request&, httplib::Response& res) {
         res.set_content("Hello World!", "text/plain");
         });
 
-    this->start_server();
+    this->startServer();
 
     std::string url = std::format("{}/hi", this->base_url);
     std::stringstream target{};
@@ -123,8 +135,11 @@ TYPED_TEST(HttpDownloaderTest, FetchHelloWorld) {
 
 TYPED_TEST(HttpDownloaderTest, FetchStream) {
 
+    std::string prefix = setUpServer(this->svr);
+    this->setConnection(prefix);
+
     HttpDownloaderTest<TypeParam>::SetupStreamRoute(this->svr);
-    this->start_server();
+    this->startServer();
 
     std::string url = std::format("{}/stream", this->base_url);
     std::stringstream target{};
@@ -135,8 +150,11 @@ TYPED_TEST(HttpDownloaderTest, FetchStream) {
 
 TYPED_TEST(HttpDownloaderTest, StreamFail) {
 
+    std::string prefix = setUpServer(this->svr);
+    this->setConnection(prefix);
+
     HttpDownloaderTest<TypeParam>::SetupStreamRoute(this->svr, false);
-    this->start_server();
+    this->startServer();
 
     std::string url = std::format("{}/stream", this->base_url);
     std::stringstream target{};
@@ -149,9 +167,24 @@ TYPED_TEST(HttpDownloaderTest, StreamFail) {
     EXPECT_EQ("abcd", target.str());
 }
 
-/* TODO:
-    * Self-signed certificate (No CA, no success expected)
-    * Outdated certificate (no success either)
-    
-    * Incomplete download
-*/
+TYPED_TEST(HttpDownloaderTest, InvalidCertificate) {
+    if constexpr (!std::is_same_v<TypeParam, httplib::SSLServer>) {
+        GTEST_SKIP() << "Skipping Certificate Test for non-SSL server";
+    }
+    else {
+        std::string prefix = setUpInvalidServer(this->svr);
+        this->setConnection(prefix);
+
+        this->svr->Get("/hi", [](const httplib::Request&, httplib::Response& res) {
+            res.set_content("Hello World!", "text/plain");
+            });
+
+        this->startServer();
+
+        std::string url = std::format("{}/hi", this->base_url);
+        std::stringstream target{};
+        EXPECT_THROW({
+            Downloader::fetch(target, url.c_str(), 5l);
+            }, std::exception);
+    }
+}
