@@ -41,7 +41,6 @@ namespace Updater2::Certificates {
 			bool hasCA{ false };
 			bool hasServer{ false };
 			bool hasTimeoutServer{ false };
-			bool hasSelfCertServer{ false };
 		};
 	public:
 		Handler(const fs::path& executable, const fs::path& caConfig, const fs::path& serverConfig);
@@ -53,7 +52,6 @@ namespace Updater2::Certificates {
 		const CertPair& ca() const { return m_ca; };
 		const CertPair& server() const { return m_server; };
 		const CertPair& timeoutServer() const { return m_timeoutServer; };
-		const CertPair& selfCertServer() const { return m_selfCertServer; };
 	private:
 		const fs::path m_opensslExecutable{};
 		const fs::path m_caConfig{};

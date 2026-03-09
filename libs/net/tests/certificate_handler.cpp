@@ -52,10 +52,6 @@ namespace Updater2::Certificates {
 				inventory.hasTimeoutServer = true;
 			}
 		}
-		if (verifyCert(m_selfCertServer, m_serverConfig)) {
-			inventory.hasSelfCertServer = true;
-		}
-		// TODO: Self-Signed
 		return inventory;
 	}
 
@@ -71,7 +67,6 @@ namespace Updater2::Certificates {
 			const fs::path serial{ m_currentPath / "certs/timeout_server.csr" };
 			createServerCert(m_timeoutServer, serial, "0");
 		}
-		// TODO: Self-Signed
 	}
 
 	void Handler::verifyNewCerts(const Handler::CertChecklist& inventory) const {
@@ -84,7 +79,6 @@ namespace Updater2::Certificates {
 		if (!inventory.hasTimeoutServer && !verifyCert(m_timeoutServer, m_serverConfig, CertTypes::TIMEOUT)) {
 			throw std::runtime_error("Valid timed-out server certificate was not available and could not be created");
 		}
-		// TODO: Self-Signed
 	}
 
 	void Handler::buildCA() const {
@@ -101,12 +95,7 @@ namespace Updater2::Certificates {
 
 	void Handler::createServerCert(const CertPair& server, const fs::path& serialPath, const std::string& days) const {
 		createServerKey(server, serialPath, days);
-		if (days[0] == '-') {  // Negative number
-			throw std::runtime_error("Implement this");
-		}
-		else {
-			certifyServer(server, serialPath, days);
-		}
+		certifyServer(server, serialPath, days);
 	}
 
 	void Handler::createServerKey(const CertPair& server, const fs::path& serialPath, const std::string& days) const {
