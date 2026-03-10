@@ -8,7 +8,6 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
-#include <iostream>
 #include <future>
 #include <format>
 #include <filesystem>
@@ -31,25 +30,25 @@ TEST(httpsdownloader, certificates) {
 }
 
 std::string setUpServer(std::unique_ptr<httplib::Server>& srv) {
-    srv.reset(new httplib::Server());
+    srv = std::make_unique<httplib::Server>();
     return "http";
 }
 
 std::string setUpServer(std::unique_ptr<httplib::SSLServer>& srv) {
     auto& certs = getCertificateHandler();
     Downloader::CustomCA::setPath(certs.ca().cert());
-    std::string key = certs.server().key();
-    std::string cert = certs.server().cert();
-    srv.reset(new httplib::SSLServer(cert.c_str(), key.c_str()));
+    const std::string key = certs.server().key();
+    const std::string cert = certs.server().cert();
+    srv = std::make_unique<httplib::SSLServer>(cert.c_str(), key.c_str());
     return "https";
 
 }
 std::string setUpInvalidServer(std::unique_ptr<httplib::SSLServer>& srv) {
     auto& certs = getCertificateHandler();
     Downloader::CustomCA::setPath(certs.ca().cert());
-    std::string key = certs.timeoutServer().key();
-    std::string cert = certs.timeoutServer().cert();
-    srv.reset(new httplib::SSLServer(cert.c_str(), key.c_str()));
+    const std::string key = certs.timeoutServer().key();
+    const std::string cert = certs.timeoutServer().cert();
+    srv = std::make_unique<httplib::SSLServer>(cert.c_str(), key.c_str());
     return "https";
 }
 
@@ -68,7 +67,7 @@ protected:
             res.set_content_provider(
                 data.size(), // Content length
                 "text/plain", // Content type
-                [succeed](std::size_t offset, std::size_t length, httplib::DataSink& sink) {
+                [succeed](const std::size_t offset, const std::size_t length, const httplib::DataSink& sink) {
                     const auto& d = data;
                     sink.write(&d[offset], (std::min)(length, DATA_CHUNK_SIZE));
                     return succeed; // return 'false' if you want to cancel the process.
@@ -126,9 +125,9 @@ TYPED_TEST(HttpDownloaderTest, FetchHelloWorld) {
 
     this->startServer();
 
-    std::string url = std::format("{}/hi", this->base_url);
+    const std::string url = std::format("{}/hi", this->base_url);
     std::stringstream target{};
-    Downloader::fetch(target, url.c_str(), 5l);
+    Downloader::fetch(target, url, 5l);
 
     EXPECT_EQ("Hello World!", target.str());
 }
@@ -141,9 +140,9 @@ TYPED_TEST(HttpDownloaderTest, FetchStream) {
     HttpDownloaderTest<TypeParam>::SetupStreamRoute(this->svr);
     this->startServer();
 
-    std::string url = std::format("{}/stream", this->base_url);
+    const std::string url = std::format("{}/stream", this->base_url);
     std::stringstream target{};
-    Downloader::fetch(target, url.c_str(), 5l);
+    Downloader::fetch(target, url, 5l);
 
     EXPECT_EQ("abcdefg", target.str());
 }
@@ -156,12 +155,12 @@ TYPED_TEST(HttpDownloaderTest, StreamFail) {
     HttpDownloaderTest<TypeParam>::SetupStreamRoute(this->svr, false);
     this->startServer();
 
-    std::string url = std::format("{}/stream", this->base_url);
+    const std::string url = std::format("{}/stream", this->base_url);
     std::stringstream target{};
 
     // We expect an error, but go on
     EXPECT_ANY_THROW({
-        Downloader::fetch(target, url.c_str(), 5l);
+        Downloader::fetch(target, url, 5l);
     });
 
     EXPECT_EQ("abcd", target.str());
@@ -169,7 +168,7 @@ TYPED_TEST(HttpDownloaderTest, StreamFail) {
 
 TYPED_TEST(HttpDownloaderTest, InvalidCertificate) {
     if constexpr (!std::is_same_v<TypeParam, httplib::SSLServer>) {
-        GTEST_SKIP() << "Skipping Certificate Test for non-SSL server";
+        return; // All fine, we just don't have need for this
     }
     else {
         std::string prefix = setUpInvalidServer(this->svr);
@@ -181,10 +180,10 @@ TYPED_TEST(HttpDownloaderTest, InvalidCertificate) {
 
         this->startServer();
 
-        std::string url = std::format("{}/hi", this->base_url);
+        const std::string url = std::format("{}/hi", this->base_url);
         std::stringstream target{};
         EXPECT_THROW({
-            Downloader::fetch(target, url.c_str(), 5l);
+            Downloader::fetch(target, url, 5l);
             }, std::exception);
     }
 }
