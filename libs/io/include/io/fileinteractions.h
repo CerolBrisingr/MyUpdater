@@ -23,6 +23,9 @@ namespace Updater2::IO::Archive {
 namespace Updater2::IO {
 	using stringList = std::vector<std::string>;
 
+    // Return value depends on waiting condition
+    // non-waiting: returns true if process was created successfully
+    // waitng     : returns true if process returns 0
     bool createProcess(const std::filesystem::path& processPath, const stringList& commandLineArgs, bool waiting = false);
 
 	bool cleanUpRemainingTempFiles();

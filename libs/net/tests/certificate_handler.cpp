@@ -181,15 +181,15 @@ namespace Updater2::Certificates {
 		return keyModulus == certModulus; // Return true if key and certificate modulus match
 	}
 
-	bool Handler::isStillValid(const CertPair& ca, const CertPair& cert, int leewayDays) const {
+	bool Handler::isStillValid(const CertPair& ca, const CertPair& certToTest, int leewayDays) const {
 		// Test certificate for validity. -checkend behavior is platform dependant in cases where expiry is in the past
-		const myfs::stringList runtimeArguments{ "verify", "-CAfile", ca.cert(), cert.cert()};
+		const myfs::stringList runtimeArguments{ "verify", "-CAfile", ca.cert(), certToTest.cert()};
 		if (!myfs::createProcess(m_opensslExecutable, runtimeArguments, true)) {
 			return false;
 		}
 		// Default: Less than 2 days (2x 62400s) remaining is too little.
 		if (leewayDays > 0) {
-			const myfs::stringList checkendArgs{ "x509", "-checkend", std::to_string(leewayDays * 62400), "-noout", "-in", cert.cert()};
+			const myfs::stringList checkendArgs{ "x509", "-checkend", std::to_string(leewayDays * 62400), "-noout", "-in", certToTest.cert()};
 			const bool hasEnoughBuffer = myfs::createProcess(m_opensslExecutable, checkendArgs, true);
 			return hasEnoughBuffer;
 		}

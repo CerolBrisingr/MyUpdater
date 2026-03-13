@@ -2,7 +2,6 @@ find_package(CURL REQUIRED)
 
 add_library(Downloader INTERFACE)
 
-# TODO: Apply to all targets intended to be "modular"
 target_compile_features(Downloader
     INTERFACE
         cxx_std_20

@@ -75,6 +75,6 @@ namespace Updater2::Certificates {
 		void verifyNewCerts(const Handler::CertChecklist& inventory) const;
 		bool verifyCert(const CertPair& cert, const fs::path& configPath, const CertTypes mode = CertTypes::DEFAULT) const;
 		bool verifyCert(const CertPair& cert, CertTypes mode = CertTypes::DEFAULT) const;
-		bool isStillValid(const CertPair& ca, const CertPair& cert, int leewayDays = 2) const;
+		bool isStillValid(const CertPair& ca, const CertPair& certToTest, int leewayDays = 2) const;
 	};
 } // namespace Updater2::Certificates
