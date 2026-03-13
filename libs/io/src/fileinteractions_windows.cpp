@@ -18,7 +18,7 @@ namespace Updater2::IO {
     } // namespace
 
 
-    bool createProcess(const std::filesystem::path& executable, const stringList& args) {
+    bool createProcess(const std::filesystem::path& executable, const stringList& args, bool waiting) {
         // Build command line ("executable" "arg1" "arg2" ...)
         std::wstring cmd = L"\"" + executable.wstring() + L"\"";
         for (const auto& arg : args) {
@@ -50,10 +50,26 @@ namespace Updater2::IO {
             &si,                    // Pointer to STARTUPINFO structure
             &pi                     // Pointer to PROCESS_INFORMATION structure
         )) {
+            // Wait in case of blocking call
+            bool success = true;
+            if (waiting) {
+                WaitForSingleObject(pi.hProcess, INFINITE);
+
+                DWORD exitCode { 0 };
+                if (GetExitCodeProcess(pi.hProcess, &exitCode)) {
+                    // Could read exit code. Return true if it signalizes success
+                    success = (exitCode == 0);
+                }
+                else {
+                    success = false; // Failed to read exitCode (probably still 0 despite fail)
+                }
+            }
+
             // Close process and thread handles. Don't leak process control.
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
-            return true;
+
+            return success;
                            }
         else {
             // GetLastError() ...

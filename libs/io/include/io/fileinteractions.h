@@ -2,19 +2,12 @@
 
 #include "io/ssldigest.h"
 
-// #define BIT7Z_USE_NATIVE_STRING avoided since vcpkg build comes without it
-// #define BIT7Z_AUTO_FORMAT moved to cmake target_compile_definitions
 #include <bit7z/bitarchivereader.hpp>
 
 #include <filesystem>
-#include <fstream>
 #include <string>
 #include <string_view>
-#include <cstddef>
-#include <memory>
 #include <system_error>
-#include <cstdint>
-#include <iterator>
 #include <vector>
 
 namespace Updater2::IO::Archive {
@@ -30,7 +23,10 @@ namespace Updater2::IO::Archive {
 namespace Updater2::IO {
 	using stringList = std::vector<std::string>;
 
-    bool createProcess(const std::filesystem::path& processPath, const stringList& commandLineArgs);
+    // Return value depends on waiting condition
+    // non-waiting: returns true if process was created successfully
+    // waitng     : returns true if process returns 0
+    bool createProcess(const std::filesystem::path& processPath, const stringList& commandLineArgs, bool waiting = false);
 
 	bool cleanUpRemainingTempFiles();
 
@@ -39,6 +35,8 @@ namespace Updater2::IO {
 
 	std::string calculateMd5HashFromFile(const std::filesystem::path& filename);
 	bool compareMd5Hashes(std::string_view hash1, std::string_view hash2);
+
+    bool file1IsOlderThan2(const std::filesystem::path& file1, const std::filesystem::path& file2);
     
 	bool isFolder(const std::filesystem::path& path_in);
 	bool isFile(const std::filesystem::path& path_in);

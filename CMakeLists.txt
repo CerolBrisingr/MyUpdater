@@ -8,6 +8,7 @@ project(CustomUpdater VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
 option(Updater2_BUILD_TESTS "Build unit tests" ON)
@@ -33,6 +34,7 @@ target_compile_options(project_warnings INTERFACE
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "Install path" FORCE)
 add_subdirectory(libs/io)
+add_subdirectory(libs/net)
 add_subdirectory(tools/list_digest)
 add_subdirectory(app)
 

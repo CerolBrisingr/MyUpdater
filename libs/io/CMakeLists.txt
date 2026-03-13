@@ -35,6 +35,11 @@ target_sources(Fileinteractions
         src/ssldigest.cpp
 )
 
+target_compile_features(Fileinteractions
+    INTERFACE
+        cxx_std_20
+)
+
 if (WIN32)
     target_sources(Fileinteractions
         PUBLIC
