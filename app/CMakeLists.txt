@@ -29,20 +29,16 @@ set_target_properties(Updater2 PROPERTIES
 
 if (WIN32)
     # Find windeployqt via location of qmake
-    block(PROPAGATE WINDEPLOYQT_EXECUTABLE)
-        get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
-        get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-        find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
-    endblock()
+    get_target_property(WINDEPLOYQT_EXECUTABLE Qt6::windeployqt IMPORTED_LOCATION)
 
-    # Run windeployqt
+    # Run windeployqt after build
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET Updater2 POST_BUILD
             COMMAND "${WINDEPLOYQT_EXECUTABLE}"
                     --no-compiler-runtime
                     --verbose 1
                     "$<TARGET_FILE:Updater2>"
-            COMMENT "Running windeployqt for Updater2 (Setting up required plugins & DLLs)..."
+            COMMENT "Running windeployqt from ${WINDEPLOYQT_EXECUTABLE}"
         )
     else()
         message(WARNING "windeployqt was not found. Will skip deployment of plugins and DLLs")
