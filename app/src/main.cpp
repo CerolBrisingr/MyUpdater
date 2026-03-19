@@ -1,4 +1,5 @@
 #include "io/fileinteractions.h"
+#include "Updater2/widget/mainwindow.h"
 #include "Updater2/hello.h"
 
 #include <iostream>
@@ -11,5 +12,5 @@ int main()
     std::cout << "Hello world!\n";
     printHello();
 
-    return 0;
+    return ui::widget::runMainwindow();
 }
