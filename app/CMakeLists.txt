@@ -12,7 +12,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 qt_standard_project_setup()
 
-qt_add_executable(Updater2)
+qt_add_executable(Updater2
+    include/Updater2/logic/interface.h)
 
 target_link_libraries(Updater2
     PRIVATE
