@@ -22,11 +22,15 @@ namespace Updater2::Core {
 
 	public slots:
 		void clickButton1(bool) {
-			qDebug() << "Clicked Button 1\n";
+			emit addMessage("Button 1");
 		}
 		void clickButton2() {
-			qDebug() << "Clicked Button 2\n";
+			emit addMessage("Button 2");
 		}
+
+	signals:
+		void addMessage(const QString& message = "");
 	};
+
 
 } // namespace Updater2::Core

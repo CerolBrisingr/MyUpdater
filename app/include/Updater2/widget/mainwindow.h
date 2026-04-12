@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QString>
 #include <QObject>
+#include <QTextEdit>
 
 #include <QSplitter>
 #include <QScrollArea>
@@ -14,7 +15,6 @@
 
 namespace Updater2::ui::widget {
 
-    void buildLayout(QWidget& window, Core::Interface& eventHandler);
     void buildSplitLayout(QWidget& window, Core::Interface& eventHandler);
 
 	inline int runMainwindow(Core::Interface& eventHandler) {
@@ -55,35 +55,19 @@ namespace Updater2::ui::widget {
         QObject::connect(buttonRemove.get(), &QPushButton::clicked,
             &eventHandler, &Core::Interface::clickButton2);
 
+        auto debugLine{ std::make_unique<QTextEdit>("Debug Window") };
+        debugLine->setReadOnly(true);
+        QObject::connect(&eventHandler, &Core::Interface::addMessage,
+            debugLine.get(), &QTextEdit::append);
+
         splitter->addWidget(updaterList.release());
 
         fixedUI->addWidget(buttonAdd.release());
         fixedUI->addWidget(buttonRemove.release());
+        fixedUI->addWidget(debugLine.release());
         fixedUI->addStretch();
         uiFrame->setLayout(fixedUI.release());
         splitter->addWidget(uiFrame.release());
-    }
-
-    inline void buildLayout(QWidget &window, Core::Interface& eventHandler) {
-        auto verticalSplit{ new QHBoxLayout{} };
-
-        auto updaterList{ new QVBoxLayout{} };
-        auto fixedUI{ new QVBoxLayout{} };
-
-        auto buttonAdd{ new QPushButton("Add Item") };
-        QObject::connect(buttonAdd, &QPushButton::clicked,
-            &eventHandler, &Core::Interface::clickButton1);
-
-        auto buttonRemove{ new QPushButton("Remove Item") };
-        QObject::connect(buttonRemove, &QPushButton::clicked,
-            &eventHandler, &Core::Interface::clickButton2);
-
-        window.setLayout(verticalSplit);
-        verticalSplit->addLayout(updaterList, 4);
-        verticalSplit->addLayout(fixedUI, 1);
-        fixedUI->addWidget(buttonAdd);
-        fixedUI->addWidget(buttonRemove);
-        fixedUI->addStretch();
     }
 
 } // Updater2::ui::widget
