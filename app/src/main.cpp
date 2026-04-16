@@ -14,5 +14,7 @@ int main()
     std::cout << "Hello world!\n";
     printHello();
 
-    return ui::widget::runMainwindow(eventHandler);
+    ui::WidgetUI UI{ eventHandler };
+
+    return UI.run();
 }
