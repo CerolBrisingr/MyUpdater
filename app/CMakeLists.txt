@@ -2,6 +2,8 @@
 add_library(Updater2_Core)
 target_sources(Updater2_Core
     PUBLIC
+        src/updater/manager.cpp
+        src/updater/entry.cpp
         src/hello.cpp)
 
 target_include_directories(Updater2_Core
@@ -13,6 +15,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
 qt_add_executable(Updater2
+    include/Updater2/updater/manager.h
+    include/Updater2/updater/entry.h
     include/Updater2/widget/mainwindow.h
     include/Updater2/logic/interface.h)
 

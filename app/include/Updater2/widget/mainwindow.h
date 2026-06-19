@@ -10,6 +10,7 @@
 #include <QTextEdit>
 #include <vector>
 
+#include <QObject>
 #include <QSplitter>
 #include <QScrollArea>
 #include <memory>
