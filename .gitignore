@@ -1,9 +1,12 @@
 .vs/*
 .vscode/*
 .idea/*
+
+*.swp
+
 out/*
+# Test results *should* be within /out already, play safe
 TestResults/*
 Testing/*
 **/XMLGoogleTestResults.xml
 **/certs/*/*
-*.swp

@@ -1,6 +1,9 @@
+#pragma once
 #include "Updater2/updater/entry.h"
 
 #include <QObject>
+
+#include <vector>
 
 namespace Updater2 {
 	namespace {
@@ -14,11 +17,14 @@ namespace Updater2 {
 		void entryRequest();
 
 	signals:
-		void entryCreated(Entry& data);
+		void entryCreated(Updater2::Entry data);
 
 	public:
+		Manager();
 
 	private:
+		int m_counter {-1};
+		std::vector<Entry> m_entries {};
 
 	};
 

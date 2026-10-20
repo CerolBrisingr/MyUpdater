@@ -1,18 +1,15 @@
 #pragma once
 
 #include <Updater2/logic/interface.h>
-#include <QtWidgets>
-#include <QVBoxLayout>
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QString>
 #include <QObject>
 #include <QTextEdit>
-#include <vector>
-
-#include <QObject>
 #include <QSplitter>
 #include <QScrollArea>
+#include <vector>
 #include <memory>
 #include <atomic>
 
